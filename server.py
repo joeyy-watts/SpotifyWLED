@@ -9,6 +9,14 @@ from spotify_api_handler import SpotifyAPIHandler
 
 from wled_handler import WLEDHandler
 
+
+# Spotify API has a rate limit per 30-second rolling window
+# so we have to be conservative in the polling frequency
+# also I don't want to get my Spotify account of many years
+# accidentally banned by abusing the API or something
+#
+# https://developer.spotify.com/documentation/web-api/concepts/rate-limits
+
 POLLING_SECONDS = 10  # period in seconds to poll Spotify API for changes
 
 class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
@@ -26,9 +34,9 @@ class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
         while (True):
             track = self.api_handler.get_current_track()
 
-            # TODO: check if WLED is running any effects (is not displaying album cover)
+            # TODO: if should_update is False, then should break loop and handle accordingly
             # if should_stop:
-            #     break
+            #     break....
 
             # first iteration, or new track
             if current_id is None or track.track_id != current_id:

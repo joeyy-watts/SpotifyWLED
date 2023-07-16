@@ -30,5 +30,4 @@ class SpotifyAPIHandler:
 
     def get_current_track(self):
         track = self.spotify.currently_playing()
-        print(f"track is {track}")
         return TrackObject(track)

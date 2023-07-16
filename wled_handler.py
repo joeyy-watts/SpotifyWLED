@@ -8,8 +8,9 @@ import requests
 from PIL import Image
 
 MAX_PER_REQUEST = 256
-BRIGHTNESS = 128
+BRIGHTNESS = 128    # brightness from 0-255
 WLED_JSON_UPDATE_PATH = "/json/state"
+WLED_POST_DELAY = 0.5
 
 class WLEDHandler():
     def __init__(self, address: str, width: int, height: int):
@@ -29,6 +30,7 @@ class WLEDHandler():
         return img
 
     def __convert_image_to_json(self, image):
+        # TODO: implement some brightness scaling for bright colors
         pixel_data = list(image.convert("RGB").getdata())
         segmented_data = []
         color_index = 0
@@ -58,16 +60,14 @@ class WLEDHandler():
         image = self.__convert_image_to_json(image)
         return image
 
-    def __send_post(self, headers, json, path: str):
+    def __send_json(self, headers, json, path: str):
         """
-        :param data: array of {"seg": {"i": []}} objects to set
+        :param data: JSON object to be sent to WLED
         :return: nothing
         """
-        address = f"{self.address}{path}"
-        print(f"address is {address}")
 
         requests.post(
-            address,
+            f"{self.address}{path}",
             json=json,
             headers=headers
         )
@@ -83,6 +83,8 @@ class WLEDHandler():
     def should_update(self):
         """
         checks if WLED target should be updated
+        If some animation is running, i.e. "Spotify mode" isn't running
+        then should be false.
         """
         print("Checking if WLED target should be updated")
         # have to implement
@@ -104,9 +106,9 @@ class WLEDHandler():
                         "bri": BRIGHTNESS,
                         "seg": segment["seg"]}
 
-                self.__send_post(headers, json, WLED_JSON_UPDATE_PATH)
-                sleep(0.5)
+                self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
+                sleep(WLED_POST_DELAY)
         else:
             json = {"on": False}
-            self.__send_post(headers, json, WLED_JSON_UPDATE_PATH)
+            self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
 
