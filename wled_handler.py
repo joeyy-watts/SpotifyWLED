@@ -8,6 +8,8 @@ import requests
 from PIL import Image
 
 MAX_PER_REQUEST = 256
+BRIGHTNESS = 128
+WLED_JSON_UPDATE_PATH = "/json/state"
 
 class WLEDHandler():
     def __init__(self, address: str, width: int, height: int):
@@ -36,7 +38,7 @@ class WLEDHandler():
             segment = {"seg": {"id": 0, "i": []}}
             segment["seg"]["i"].append(color_index)
 
-            for i in range(MAX_PER_REQUEST):
+            for i in range(MAX_PER_REQUEST + 1):
                 if color_index >= len(pixel_data):
                     break
 
@@ -70,27 +72,41 @@ class WLEDHandler():
             headers=headers
         )
 
-    def update_cover(self, cover_url: str):
-        """
-        updates WLED target with album cover
-        """
-        print(f"Updating WLED target with album cover :: {cover_url}")
-        data = self.__format_image(cover_url)
-        headers = {"Content-Type": "application/json"}
-        for segment in data:
-            json = {"on": True,
-                    "bri": 128,
-                    "seg": segment["seg"]}
-            print(f"sending following json :: {json}")
-            self.__send_post(headers, json, "/json/state")
-            sleep(2)
-        # have to implement
-        pass
-
-    def get_current_state(self):
+    def __get_current_state(self):
         """
         gets the current state of the WLED target
         """
         print("Getting current state of WLED target")
         # have to implement
         pass
+
+    def should_update(self):
+        """
+        checks if WLED target should be updated
+        """
+        print("Checking if WLED target should be updated")
+        # have to implement
+        pass
+
+    def update_cover(self, cover_url: str):
+        """
+        updates WLED target with album cover
+        """
+        print(f"Updating WLED target with album cover :: {cover_url}")
+
+        headers = {"Content-Type": "application/json"}
+
+        if cover_url is not None:
+            data = self.__format_image(cover_url)
+
+            for segment in data:
+                json = {"on": True,
+                        "bri": BRIGHTNESS,
+                        "seg": segment["seg"]}
+
+                self.__send_post(headers, json, WLED_JSON_UPDATE_PATH)
+                sleep(0.5)
+        else:
+            json = {"on": False}
+            self.__send_post(headers, json, WLED_JSON_UPDATE_PATH)
+
