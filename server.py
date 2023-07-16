@@ -31,7 +31,7 @@ class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
 
             self.wled_handler.update_cover(track.cover_url)
 
-            sleep(calculate_remaining_time(track) * 1000)
+            sleep(calculate_remaining_time(track) / 1000)
 
 
     def do_POST(self):
