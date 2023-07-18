@@ -7,6 +7,7 @@ from image_utils import download_image, downscale_image, calculate_average_brigh
 
 MAX_PER_REQUEST = 256
 TARGET_IMAGE_BRIGHTNESS = 100   # the brightness of image to be scaled to (0 - 255)
+ENABLE_IMAGE_BRIGHTNESS_SCALING = True  # enable/disable image brightness scaling
 WLED_BASE_BRIGHTNESS = 80    # WLED brightness (0 - 255)
 WLED_JSON_UPDATE_PATH = "/json/state"
 
@@ -92,7 +93,10 @@ class WLEDHandler():
         if cover_url is not None:
             image = download_image(cover_url)
             image = downscale_image(image, self.size)
-            image = scale_brightness(image, TARGET_IMAGE_BRIGHTNESS)
+
+            if ENABLE_IMAGE_BRIGHTNESS_SCALING:
+                image = scale_brightness(image, TARGET_IMAGE_BRIGHTNESS)
+
             data = self.__convert_image_to_json(image)
 
             for segment in data:
