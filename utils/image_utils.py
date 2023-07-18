@@ -24,7 +24,10 @@ def calculate_average_brightness(image):
     return average_brightness
 
 def scale_brightness(image, desired_brightness):
-    # TODO: account for dark spots in image
+    # TODO: better scaling
+    # have to account for: dark spots, dark colored background
+    # local scaling if black background
+    # scaling for light colors
     image_hsv = image.convert("HSV")
     image_hsv_pixels = list(image_hsv.getdata())
 

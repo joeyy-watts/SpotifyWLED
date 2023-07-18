@@ -5,10 +5,10 @@ import requests
 
 from utils.image_utils import download_image, downscale_image, scale_brightness
 
-MAX_PER_REQUEST = 256   # max colors to be specified in each request to WLED, 256 is the max
-TARGET_IMAGE_BRIGHTNESS = 150   # the brightness of image to be scaled to (0 - 255)
+MAX_PER_REQUEST = 1024   # max colors to be specified in each request to WLED, 256 is the max
+TARGET_IMAGE_BRIGHTNESS = 100   # the brightness of image to be scaled to (0 - 255)
 ENABLE_IMAGE_BRIGHTNESS_SCALING = True  # enable/disable image brightness scaling
-WLED_BASE_BRIGHTNESS = 100    # WLED brightness (0 - 255)
+WLED_BASE_BRIGHTNESS = 80    # WLED brightness (0 - 255)
 WLED_JSON_UPDATE_PATH = "/json/state"
 
 headers = {"Content-Type": "application/json"}
@@ -22,6 +22,7 @@ class WLEDHandler():
     def __convert_image_to_json_single(self, image):
         # TODO: implement other color addressing modes (Hybrid, Range)
         # TODO: fix missing pixel in each segment
+        # whatever the segment size is, the last pixel is skipped for some reason
         pixel_data = list(image.convert("RGB").getdata())
         segmented_data = []
         color_index = 0
@@ -32,9 +33,6 @@ class WLEDHandler():
             segment["seg"]["i"].append(color_index)
 
             for i in range(MAX_PER_REQUEST):
-                if color_index >= len(pixel_data):
-                    break
-
                 r, g, b = pixel_data[color_index]
                 hex_color = f"{r:02x}{g:02x}{b:02x}"
                 segment["seg"]["i"].append(hex_color)
