@@ -10,7 +10,6 @@ from PIL import Image
 MAX_PER_REQUEST = 256
 BRIGHTNESS = 80    # brightness from 0-255
 WLED_JSON_UPDATE_PATH = "/json/state"
-WLED_POST_DELAY = 0.1
 
 headers = {"Content-Type": "application/json"}
 
@@ -117,7 +116,6 @@ class WLEDHandler():
                         "seg": segment["seg"]}
 
                 self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
-                sleep(WLED_POST_DELAY)
         else:
             json = {"on": False}
             self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
