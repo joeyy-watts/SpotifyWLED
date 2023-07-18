@@ -1,9 +1,9 @@
 from functools import partial
 from http.server import HTTPServer
 
-from common import get_client_secret, get_client_id, get_target_address
-from server import SpotifyWLEDHTTPHandler
-from wled_handler import WLEDHandler
+from utils.common import get_client_secret, get_client_id, get_target_address
+from handlers.server import SpotifyWLEDHTTPHandler
+from handlers.wled_handler import WLEDHandler
 
 """
 Main entry point for the application

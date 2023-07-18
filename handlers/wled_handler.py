@@ -3,7 +3,7 @@ Class to interact with WLED server
 """
 import requests
 
-from image_utils import download_image, downscale_image, calculate_average_brightness, scale_brightness
+from utils.image_utils import download_image, downscale_image, scale_brightness
 
 MAX_PER_REQUEST = 256   # max colors to be specified in each request to WLED, 256 is the max
 TARGET_IMAGE_BRIGHTNESS = 150   # the brightness of image to be scaled to (0 - 255)

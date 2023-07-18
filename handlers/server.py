@@ -5,10 +5,10 @@ The HTTP sever for the application
 from http.server import BaseHTTPRequestHandler
 from time import sleep
 
-from spotify_api_handler import SpotifyAPIHandler
-from spotify_utils import calculate_remaining_time
+from handlers.spotify_api_handler import SpotifyAPIHandler
+from utils.spotify_utils import calculate_remaining_time
 
-from wled_handler import WLEDHandler
+from handlers.wled_handler import WLEDHandler
 
 
 # Spotify API has a rate limit per 30-second rolling window

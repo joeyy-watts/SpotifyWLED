@@ -1,7 +1,7 @@
 """
 Utility functions related to the Spotify API
 """
-from spotify_api_handler import TrackObject
+from handlers.spotify_api_handler import TrackObject
 import requests
 
 
