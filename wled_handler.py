@@ -1,14 +1,13 @@
 """
 Class to interact with WLED server
 """
-import io
-from time import sleep
-
 import requests
-from PIL import Image
+
+from image_utils import download_image, downscale_image, calculate_average_brightness, scale_brightness
 
 MAX_PER_REQUEST = 256
-BRIGHTNESS = 80    # brightness from 0-255
+TARGET_IMAGE_BRIGHTNESS = 100   # the brightness of image to be scaled to (0 - 255)
+WLED_BASE_BRIGHTNESS = 80    # WLED brightness (0 - 255)
 WLED_JSON_UPDATE_PATH = "/json/state"
 
 headers = {"Content-Type": "application/json"}
@@ -19,18 +18,7 @@ class WLEDHandler():
         # size in WxH format
         self.size = (width, height)
 
-    def __download_image(self, url):
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.content
-
-    def __downscale_image(self, image):
-        img = Image.open(io.BytesIO(image))
-        img.thumbnail(self.size)
-        return img
-
     def __convert_image_to_json(self, image):
-        # TODO: implement some brightness scaling for bright colors
         # TODO: implement other color addressing modes (Hybrid, Range)
         pixel_data = list(image.convert("RGB").getdata())
         segmented_data = []
@@ -54,12 +42,6 @@ class WLEDHandler():
             segmented_data.append(segment)
 
         return segmented_data
-
-    def __format_image(self, cover_url: str):
-        image = self.__download_image(cover_url)
-        image = self.__downscale_image(image)
-        image = self.__convert_image_to_json(image)
-        return image
 
     def __send_json(self, headers, json, path: str):
         """
@@ -108,11 +90,14 @@ class WLEDHandler():
         """
 
         if cover_url is not None:
-            data = self.__format_image(cover_url)
+            image = download_image(cover_url)
+            image = downscale_image(image, self.size)
+            image = scale_brightness(image, TARGET_IMAGE_BRIGHTNESS)
+            data = self.__convert_image_to_json(image)
 
             for segment in data:
                 json = {"on": True,
-                        "bri": BRIGHTNESS,
+                        "bri": WLED_BASE_BRIGHTNESS,
                         "seg": segment["seg"]}
 
                 self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
