@@ -27,3 +27,13 @@ def get_client_id(method: str = 'file'):
         return os.environ['SPOTIFY_CLIENT_ID']
     else:
         raise ValueError(f"Invalid method {method}")
+
+def get_target_address(method: str = 'file'):
+    """
+    :return: the Spotify client ID, using the specified method
+    """
+    if method == 'file':
+        with open('wled.conf', 'r') as f:
+            return f.read()
+    else:
+        raise ValueError(f"Invalid method {method}")
