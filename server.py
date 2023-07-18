@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler
 from time import sleep
 
 from spotify_api_handler import SpotifyAPIHandler
+from spotify_utils import calculate_remaining_time
 
 from wled_handler import WLEDHandler
 
@@ -45,7 +46,12 @@ class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
 
             current_id = track.track_id
 
-            sleep(POLLING_SECONDS)
+            remaining_time = calculate_remaining_time(track) / 1000
+
+            if remaining_time < POLLING_SECONDS and track.is_playing:
+                sleep(remaining_time)
+            else:
+                sleep(POLLING_SECONDS)
 
     def do_POST(self):
         if '/' in self.path:

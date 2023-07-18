@@ -13,12 +13,14 @@ class TrackObject:
             self.progress = track_dict["progress_ms"]
             self.track_length = track_dict["item"]["duration_ms"]
             self.cover_url = track_dict["item"]["album"]["images"][0]["url"]
+            self.is_playing = track_dict["is_playing"]
         else:
             self.track_id = None
             self.track_name = "Not Playing"
             self.progress = None
             self.track_length = None
             self.cover_url = None
+            self.is_playing = False
 
 class SpotifyAPIHandler:
     def __init__(self, client_id: str, client_secret: str):
