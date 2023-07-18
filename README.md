@@ -1,6 +1,8 @@
 # SpotifyWLED
 A simple script to listen to the currently playing track on your Spotify account and forward it to a WLED (https://github.com/Aircoookie/WLED) LED matrix.
 
+_Note: this repo is in a very early stage; some portions are hardcoded and ad-hoc_
+
 ## Usage
 1. Setup an App in your Spotify dashboard (https://developer.spotify.com/dashboard)
 2. Add your active Spotify account as a user of the App
