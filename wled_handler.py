@@ -8,9 +8,11 @@ import requests
 from PIL import Image
 
 MAX_PER_REQUEST = 256
-BRIGHTNESS = 128    # brightness from 0-255
+BRIGHTNESS = 80    # brightness from 0-255
 WLED_JSON_UPDATE_PATH = "/json/state"
-WLED_POST_DELAY = 0.5
+WLED_POST_DELAY = 0.1
+
+headers = {"Content-Type": "application/json"}
 
 class WLEDHandler():
     def __init__(self, address: str, width: int, height: int):
@@ -26,11 +28,11 @@ class WLEDHandler():
     def __downscale_image(self, image):
         img = Image.open(io.BytesIO(image))
         img.thumbnail(self.size)
-        print(f"img is {img}")
         return img
 
     def __convert_image_to_json(self, image):
         # TODO: implement some brightness scaling for bright colors
+        # TODO: implement other color addressing modes (Hybrid, Range)
         pixel_data = list(image.convert("RGB").getdata())
         segmented_data = []
         color_index = 0
@@ -65,6 +67,7 @@ class WLEDHandler():
         :param data: JSON object to be sent to WLED
         :return: nothing
         """
+        headers["Content-Length"] = str(len(json))
 
         requests.post(
             f"{self.address}{path}",
@@ -76,9 +79,10 @@ class WLEDHandler():
         """
         gets the current state of the WLED target
         """
-        print("Getting current state of WLED target")
-        # have to implement
-        pass
+        resp = requests.get(f"{self.address}/json/state")
+        print(f"sending request :: {self.address}/json/state")
+        print(f"resp is :: {resp.text}")
+        return resp.json()
 
     def should_update(self):
         """
@@ -86,17 +90,23 @@ class WLEDHandler():
         If some animation is running, i.e. "Spotify mode" isn't running
         then should be false.
         """
-        print("Checking if WLED target should be updated")
-        # have to implement
-        pass
+        # TWO CASES WHERE should_update IS FALSE
+        # 1. WLED is off
+        # 2. WLED is on, but not in "Spotify mode"
+
+        # WLED is off, then just shouldn't update anymore
+        if self.__get_current_state()["on"] is False:
+            return False
+        else:
+            # TODO: have to implement some way to check if WLED is in "Spotify mode"
+            # maybe use "v" flag, and check current WLED state if it matches the album cover
+            return True
 
     def update_cover(self, cover_url: str):
         """
         updates WLED target with album cover
+        # TODO: add some warnings (flashing light or something when API error)
         """
-        print(f"Updating WLED target with album cover :: {cover_url}")
-
-        headers = {"Content-Type": "application/json"}
 
         if cover_url is not None:
             data = self.__format_image(cover_url)
@@ -112,3 +122,9 @@ class WLEDHandler():
             json = {"on": False}
             self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
 
+    def on(self, on_state: bool):
+        """
+        turns on/off WLED target
+        """
+        json = {"on": on_state}
+        self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)

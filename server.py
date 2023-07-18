@@ -29,14 +29,15 @@ class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
         """
         initiates listening loop to start updating WLED target with album cover
         """
+        # when starting Spotify mode, turn on WLED regardless
+        self.wled_handler.on(True)
         current_id = None
 
         while (True):
-            track = self.api_handler.get_current_track()
+            if not self.wled_handler.should_update():
+                break
 
-            # TODO: if should_update is False, then should break loop and handle accordingly
-            # if should_stop:
-            #     break....
+            track = self.api_handler.get_current_track()
 
             # first iteration, or new track
             if current_id is None or track.track_id != current_id:
