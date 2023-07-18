@@ -5,7 +5,7 @@ import requests
 
 from image_utils import download_image, downscale_image, calculate_average_brightness, scale_brightness
 
-MAX_PER_REQUEST = 256
+MAX_PER_REQUEST = 256   # max colors to be specified in each request to WLED, 256 is the max
 TARGET_IMAGE_BRIGHTNESS = 150   # the brightness of image to be scaled to (0 - 255)
 ENABLE_IMAGE_BRIGHTNESS_SCALING = True  # enable/disable image brightness scaling
 WLED_BASE_BRIGHTNESS = 100    # WLED brightness (0 - 255)
@@ -19,8 +19,9 @@ class WLEDHandler():
         # size in WxH format
         self.size = (width, height)
 
-    def __convert_image_to_json(self, image):
+    def __convert_image_to_json_single(self, image):
         # TODO: implement other color addressing modes (Hybrid, Range)
+        # TODO: fix missing pixel in each segment
         pixel_data = list(image.convert("RGB").getdata())
         segmented_data = []
         color_index = 0
@@ -43,7 +44,6 @@ class WLEDHandler():
             segmented_data.append(segment)
 
         return segmented_data
-
     def __send_json(self, headers, json, path: str, extra_headers=False):
         """
         :param data: JSON object to be sent to WLED
@@ -98,7 +98,7 @@ class WLEDHandler():
             if ENABLE_IMAGE_BRIGHTNESS_SCALING:
                 image = scale_brightness(image, TARGET_IMAGE_BRIGHTNESS)
 
-            data = self.__convert_image_to_json(image)
+            data = self.__convert_image_to_json_single(image)
 
             for segment in data:
                 json = {"on": True,
