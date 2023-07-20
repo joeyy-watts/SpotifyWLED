@@ -6,9 +6,9 @@ import requests
 from utils.image_utils import download_image, downscale_image, scale_brightness
 
 MAX_PER_REQUEST = 1024   # max colors to be specified in each request to WLED, 256 is the max
-TARGET_IMAGE_BRIGHTNESS = 100   # the brightness of image to be scaled to (0 - 255)
+TARGET_IMAGE_BRIGHTNESS = 150   # the brightness of image to be scaled to (0 - 255)
 ENABLE_IMAGE_BRIGHTNESS_SCALING = True  # enable/disable image brightness scaling
-WLED_BASE_BRIGHTNESS = 80    # WLED brightness (0 - 255)
+WLED_BASE_BRIGHTNESS = 150    # WLED brightness (0 - 255)
 WLED_JSON_UPDATE_PATH = "/json/state"
 
 headers = {"Content-Type": "application/json"}
