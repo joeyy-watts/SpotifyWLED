@@ -18,7 +18,7 @@ from handlers.wled_handler import WLEDHandler
 #
 # https://developer.spotify.com/documentation/web-api/concepts/rate-limits
 
-POLLING_SECONDS = 10  # period in seconds to poll Spotify API for changes
+POLLING_SECONDS = 5  # period in seconds to poll Spotify API for changes
 
 class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
     def __init__(self, client_id: str, client_secret: str, wled_handler: WLEDHandler, *args, **kwargs):
