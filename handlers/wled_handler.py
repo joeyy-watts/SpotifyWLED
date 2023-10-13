@@ -19,6 +19,7 @@ class WLEDHandler():
         # size in WxH format
         self.size = (width, height)
 
+    # TODO: move to image_utils
     def __convert_image_to_json_single(self, image):
         # TODO: implement other color addressing modes (Hybrid, Range)
         # TODO: fix missing pixel in each segment
