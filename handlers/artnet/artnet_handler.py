@@ -26,6 +26,17 @@ CHANNEL_WIDTH_MAPPING = {
 
 class ArtNetHandler:
     def __init__(self, target_address: str, port: int, leds: int, mode: WLEDArtNetMode):
+        """
+        Initializes a handler for an ArtNet node.
+
+        # TODO: if mDNS is given, resolve to IP address first
+        # as otherwise it introduces significant lag to resolve the address first
+
+        :param target_address: address of the ArtNet node
+        :param port: port of the ArtNet node (standard port is 6454; not recommended to change)
+        :param leds: number of leds in the ArtNet node
+        :param mode: ArtNet mode of the WLED target
+        """
         self.node = ArtNetNode(target_address, port)
         self.leds = leds
         self.mode = mode
