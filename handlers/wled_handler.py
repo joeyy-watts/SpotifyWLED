@@ -1,8 +1,12 @@
 """
 Class to interact with WLED server
 """
+import asyncio
+
 import requests
 
+from handlers.artnet.artnet_handler import ArtNetHandler
+from utils.effects.effects import PlaybackEffects
 from utils.image_utils import download_image, downscale_image, scale_brightness
 
 MAX_PER_REQUEST = 1024   # max colors to be specified in each request to WLED, 256 is the max
@@ -13,7 +17,7 @@ WLED_JSON_UPDATE_PATH = "/json/state"
 
 headers = {"Content-Type": "application/json"}
 
-class WLEDHandler():
+class BaseWLEDHandler():
     def __init__(self, address: str, width: int, height: int):
         self.address = address
         # size in WxH format
@@ -115,3 +119,37 @@ class WLEDHandler():
         """
         json = {"on": on_state}
         self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
+
+class WLEDArtNet(BaseWLEDHandler):
+    def __init__(self, address: str, handler: ArtNetHandler, width: int, height: int):
+        super().__init__(address, width, height)
+        self.handler = handler
+
+    async def play_cover(self, image):
+        """
+        applies the playing animation to the given cover
+        :param image: current track
+        :return: an asyncio task
+        """
+        factors = PlaybackEffects(self.size[0], self.size[1]).generic_play()
+        return asyncio.create_task(self.__animate_cover_task(image, factors))
+
+    async def pause_cover(self, image):
+        """
+        applies the paused animation to the given cover
+        :param image: current track
+        :return: an asyncio task
+        """
+        factors = PlaybackEffects(self.size[0], self.size[1]).pause()
+        return asyncio.create_task(self.__animate_cover_task(image, factors))
+
+    async def __animate_cover_task(self, image, factors):
+        """
+        an asyncio task to animate cover in the background
+        :param track: currently track
+        :param factors: the animation factors to be applied to the cover
+        :return: asyncio coroutine
+        """
+        while True:
+            for i in factors:
+                await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)] for r, g, b in image])
