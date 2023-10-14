@@ -5,6 +5,9 @@ Classes for interacting with Spotify API
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
+from utils.image_utils import download_image
+
+
 class TrackObject:
     def __init__(self, track_dict):
         if track_dict is not None:
@@ -33,3 +36,12 @@ class SpotifyAPIHandler:
     def get_current_track(self):
         track = self.spotify.currently_playing()
         return TrackObject(track)
+
+    def get_current_track_cover(self):
+        track = self.spotify.currently_playing()
+        cover_url = track["item"]["album"]["images"][0]["url"]
+
+        if cover_url is not None:
+            return download_image(cover_url)
+        else:
+            return None
