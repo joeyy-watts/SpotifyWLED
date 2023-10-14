@@ -50,14 +50,13 @@ class Effect():
             self.factors.append(function(i, *args, **kwargs))
 
 
-class PulsateEffect(Effect):
+class WaveformEffects(Effect):
     """
-    Pulsate Effect
-
-    Varies the brightness of the image according to the mode, currently supported types:
+    Waveform-based effects.
+    Varies the brightness of the entire image, currently supported types:
         - Sinusoidal
         - Sawtooth
-        - Traingular
+        - Triangular
     """
     def sinus_pulse(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5):
         """
