@@ -24,13 +24,13 @@ class PlaybackEffects(WaveformEffects):
         # splice the main pulse with breathing at the crest
         return main_pulse[:crest_idx] + (breathe_pulse * breathe_count) + main_pulse[crest_idx:]
 
-    def generic_play(self, period: float = 1):
+    def generic_play(self, period: float = 0.5):
         """
         A generic playing animation, pulsates the image continuously.
         :param period:
         :return: list of brightness factors
         """
-        return self.sinus(a=0.5, p=period, v=0.5)
+        return self.sinus(a=0.3, p=period, v=0.5)
 
     def bpm_play(self, bpm: int):
         """
