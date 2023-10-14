@@ -140,7 +140,7 @@ class WLEDArtNet(BaseWLEDHandler):
         :return: an asyncio task
         """
         factors = PlaybackEffects(self.size[0], self.size[1]).generic_play()
-        return asyncio.create_task(self.__animate_cover_task(image, factors))
+        return await asyncio.create_task(self.__animate_cover_task(image, factors))
 
     async def pause_cover(self, image):
         """
@@ -149,7 +149,7 @@ class WLEDArtNet(BaseWLEDHandler):
         :return: an asyncio task
         """
         factors = PlaybackEffects(self.size[0], self.size[1]).pause()
-        return asyncio.create_task(self.__animate_cover_task(image, factors))
+        return await asyncio.create_task(self.__animate_cover_task(image, factors))
 
     async def __animate_cover_task(self, image, factors):
         """
