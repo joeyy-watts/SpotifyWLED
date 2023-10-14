@@ -1,5 +1,5 @@
 """
-Effects to add to Spotify album cover
+Classes for low-level effects (i.e. effects from pure waveforms)
 """
 import math
 from typing import Callable
@@ -71,8 +71,23 @@ class PulsateEffect(Effect):
         def func(i):
             # TODO: revisit this so period and resolution are independent
             # my math has gotten worse after graduating..
-            return a * math.sin(2 * math.pi / p * (i * (p / self.resolution))) + v
+            time = i * (p / self.resolution)
+            return a * math.sin(2 * math.pi / p * time) + v
 
         self._calculate_factors(func)
-        print(self.factors)
+        return self.factors
+
+    def sawtooth_pulse(self, a, p, v):
+        """
+        Generates a sawtooth pulsate effect.
+
+        :param a: amplitude
+        :param p: period
+        :param v: vertical shift
+        """
+        def func(i):
+            time = (i / self.resolution) * p
+            return a * (2 * (time / p - math.floor(0.5 + time / p))) + v
+
+        self._calculate_factors(func)
         return self.factors
