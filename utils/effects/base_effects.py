@@ -17,9 +17,6 @@ class Effect():
             calculated according to each effect's formula to avoid the waveform
             being clipped.
         """
-        # a fixed factor to multiply image RGB values with
-        # this is pre-calculated by _calculate_factors and is bound to the class
-        self.factors = []
         self.resolution = resolution
 
     def _get_effect(self, mode):
@@ -46,8 +43,10 @@ class Effect():
         :param kwargs: keyword arguments for `function`
         :return: a list of RGB values to multiply the image with
         """
+        factors = []
         for i in range(0, self.resolution):
-            self.factors.append(function(i, *args, **kwargs))
+            factors.append(function(i, *args, **kwargs))
+        return factors
 
 
 class WaveformEffects(Effect):
@@ -73,8 +72,7 @@ class WaveformEffects(Effect):
             time = i * (p / self.resolution)
             return a * math.sin(2 * math.pi / p * time) + v
 
-        self._calculate_factors(func)
-        return self.factors
+        return self._calculate_factors(func)
 
     def sawtooth_pulse(self, a, p, v):
         """
@@ -88,5 +86,4 @@ class WaveformEffects(Effect):
             time = (i / self.resolution) * p
             return a * (2 * (time / p - math.floor(0.5 + time / p))) + v
 
-        self._calculate_factors(func)
-        return self.factors
+        return self._calculate_factors(func)
