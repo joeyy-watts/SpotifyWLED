@@ -57,7 +57,7 @@ class WaveformEffects(Effect):
         - Sawtooth
         - Triangular
     """
-    def sinus_pulse(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0):
+    def sinus(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0):
         """
         Generates sinusoidal pulsate effect.
         Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
@@ -75,7 +75,24 @@ class WaveformEffects(Effect):
 
         return self._calculate_factors(func)
 
-    def sawtooth_pulse(self, a, p, v):
+    def trunc_sinus(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, upper: bool = True):
+        """
+        Generates truncated sinusoidal pulsate effect.
+        Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
+
+        :param a: amplitude
+        :param p: period
+        :param v: vertical shift
+        :param h: horizontal shift
+        :param upper: if True, returns the upper half of the sinusoidal wave
+        """
+        def func(i):
+            time = i * ((p/2) / self.resolution)
+            return a * math.sin(2 * math.pi / p * time - h) + v
+
+        return self._calculate_factors(func)
+
+    def sawtooth(self, a, p, v):
         """
         Generates a sawtooth pulsate effect.
 
