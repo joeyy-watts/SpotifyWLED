@@ -2,17 +2,16 @@
 The HTTP server for the application
 """
 import asyncio
-from enum import Enum
-from http.server import BaseHTTPRequestHandler
-from socketserver import ThreadingMixIn
 from time import sleep
+
+from aiohttp import web
 
 from handlers.spotify_api_handler import SpotifyAPIHandler
 from utils.common import WLEDMode
-from utils.image_utils import downscale_image
+from utils.image_utils import downscale_image, image_to_rgb_array
 from utils.spotify_utils import calculate_remaining_time
 
-from handlers.wled_handler import WLEDArtNet, BaseWLEDHandler, WLEDJson
+from handlers.wled_handler import WLEDArtNet, WLEDJson
 
 # Spotify API has a rate limit per 30-second rolling window
 # so we have to be conservative in the polling frequency
@@ -23,46 +22,98 @@ from handlers.wled_handler import WLEDArtNet, BaseWLEDHandler, WLEDJson
 
 POLLING_SECONDS = 5  # period in seconds to poll Spotify API for changes
 
-class MainHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, client_id: str,
+class AioMainHTTPHandler():
+    def __init__(self,
+                 client_id: str,
                  client_secret: str,
                  wled_address: str,
                  wled_mode: WLEDMode,
                  width: int,
-                 height: int,
-                 *args, **kwargs):
+                 height: int):
+        self.app = web.Application()
+        self.address = wled_address
         self.api_handler = SpotifyAPIHandler(client_id, client_secret)
         self.width = width
         self.height = height
         self.wled_mode = wled_mode
-        self.wled_handler = self.__get_wled_handler(wled_address, wled_mode)
+        # self.wled_handler = self.__get_wled_handler(wled_address, wled_mode)
 
-        # needed to initialize base HTTP server class correctly
-        super().__init__(*args, **kwargs)
+    async def hello(self, request):
+        return web.Response(text="Hello, world")
 
-    def __get_wled_handler(self, address: str, mode: WLEDMode):
+    async def __get_wled_handler(self, address: str, mode: WLEDMode):
+        # if mode == WLEDMode.ARTNET:
+        #     return WLEDArtNet(address, self.width, self.height)
+        # elif mode == WLEDMode.JSON:
+        #     return WLEDJson(address, self.width, self.height)
+        print("getting wled handler")
+        task = asyncio.create_task(self.__actual_get(address, mode))
+        await task
+        print(f"got ret {task}")
+        return task.result()
+
+    async def __actual_get(self, address, mode):
         if mode == WLEDMode.ARTNET:
             return WLEDArtNet(address, self.width, self.height)
         elif mode == WLEDMode.JSON:
             return WLEDJson(address, self.width, self.height)
 
-    def __run_loop(self):
+    async def __run_loop(self, request):
         """
         runs the correct loop functions according to given WLED handler
         """
+        print("running loop!")
+        task = asyncio.create_task(self.__get_wled_handler(self.address, self.wled_mode))
+        await task
         if self.wled_mode is WLEDMode.ARTNET:
-            self.__artnet_loop(self.wled_handler)
+            await self.__artnet_loop(task.result())
         elif self.wled_mode is WLEDMode.JSON:
-            self.__json_loop(self.wled_handler)
+            await self.__json_loop(task.result())
 
-    def __artnet_loop(self, handler: WLEDArtNet):
+        return web.Response(text="Started loop")
+
+    async def __artnet_loop(self, handler: WLEDArtNet):
         """
         initiates listening loop to start updating WLED target with album cover
         """
+        print('Starting Artnet loop')
+        shown_track_id = None
         while(True):
-            pass
+            print('got into loop')
+            current_track = self.api_handler.get_current_track()
+            print(f"current track: {current_track}")
+            # nothing is playing, wait and continue loop
+            if current_track is None:
+                sleep(POLLING_SECONDS)
+                continue
 
-    def __json_loop(self, wled_handler: WLEDJson):
+            # if track is the same, continue loop
+            if current_track.track_id == shown_track_id:
+                sleep(POLLING_SECONDS)
+                continue
+            print("after")
+            # get current track cover
+            image = self.api_handler.get_current_track_cover()
+            image = downscale_image(image, (self.width, self.height))
+            image = image_to_rgb_array(image)
+
+            # animate according to playback state
+            if current_track.is_playing:
+                print("playing")
+                await handler.play_cover(image)
+            else:
+                await handler.pause_cover(image)
+
+            # wait until polling or track ends
+            remaining_time = calculate_remaining_time(current_track) / 1000
+
+            if remaining_time < POLLING_SECONDS and current_track.is_playing:
+                sleep(remaining_time)
+            else:
+                sleep(POLLING_SECONDS)
+
+
+    async def __json_loop(self, wled_handler: WLEDJson):
         """
         initiates listening loop to start updating WLED target with album cover
         """
@@ -89,16 +140,9 @@ class MainHTTPHandler(BaseHTTPRequestHandler):
             else:
                 sleep(POLLING_SECONDS)
 
-    def do_POST(self):
-        if '/' in self.path:
-            self.send_response(501)
-
-    def do_GET(self):
-        if self.path == '/start':
-            self.send_response(200)
-            self.send_header("Content-type", "text/html")
-            self.end_headers()
-            self.__run_loop()
-        elif self.path == '/stop':
-            # TODO: async and stop loop (manual stop via API)
-            pass
+    def run(self, host='0.0.0.0', port=8080):
+        self.app.add_routes([
+            web.get('/', self.hello),
+            web.get('/start', self.__run_loop)
+        ])
+        web.run_app(self.app, host=host, port=port)
