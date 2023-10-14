@@ -4,6 +4,9 @@ Classes for low-level effects (i.e. effects from pure waveforms)
 import math
 from typing import Callable
 
+# TODO: move math-related functions to dedicated module
+# TODO: refactor so that wave functions can be plugged into effects
+# TODO: effect layering
 
 class Effect():
     def __init__(self, width: int, height: int, resolution: int = 100):
@@ -105,3 +108,23 @@ class WaveformEffects(Effect):
             return a * (2 * (time / p - math.floor(0.5 + time / p))) + v
 
         return self._calculate_factors(func)
+
+class ScaleEffects(Effect):
+    """
+    Image-scaling based effects.
+    Currently planned:
+        - Zoom
+    """
+    pass
+
+class OverlayEffects(Effect):
+    """
+    Effects that add elements on top of the image.
+    Currently planned:
+        - Bar (solid colored bar that wipes across image)
+        - Noise (solid noise overlay)
+        - Twinkle
+
+    refer to Jinx for additional ideas
+    """
+    pass
