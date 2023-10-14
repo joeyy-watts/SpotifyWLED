@@ -1,15 +1,15 @@
 """
-The HTTP sever for the application
+The HTTP server for the application
 """
-
+import asyncio
 from http.server import BaseHTTPRequestHandler
 from time import sleep
 
 from handlers.spotify_api_handler import SpotifyAPIHandler
+from utils.image_utils import downscale_image
 from utils.spotify_utils import calculate_remaining_time
 
-from handlers.wled_handler import WLEDHandler
-
+from handlers.wled_handler import WLEDArtNet
 
 # Spotify API has a rate limit per 30-second rolling window
 # so we have to be conservative in the polling frequency
@@ -20,13 +20,13 @@ from handlers.wled_handler import WLEDHandler
 
 POLLING_SECONDS = 5  # period in seconds to poll Spotify API for changes
 
-class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, client_id: str, client_secret: str, wled_handler: WLEDHandler, *args, **kwargs):
+class AsyncHTTPHandler(BaseHTTPRequestHandler):
+    def __init__(self, client_id: str, client_secret: str, wled_handler: WLEDArtNet, *args, **kwargs):
         self.api_handler = SpotifyAPIHandler(client_id, client_secret)
         self.wled_handler = wled_handler
         super().__init__(*args, **kwargs)
 
-    def _start_loop(self):
+    async def _start_loop(self):
         """
         initiates listening loop to start updating WLED target with album cover
         """
@@ -37,12 +37,22 @@ class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
         while (True):
             if not self.wled_handler.should_update():
                 break
+            image = self.api_handler.get_current_track_cover()
+            image = downscale_image(image, self.wled_handler.size)
 
             track = self.api_handler.get_current_track()
 
             # first iteration, or new track
-            if current_id is None or track.track_id != current_id:
-                self.wled_handler.update_cover(track.cover_url)
+            if track.is_playing is False:
+                await self.wled_handler.pause_cover(image)
+            else:
+                await self.wled_handler.play_cover(image)
+
+            # if current_id is None or track.track_id != current_id:
+            #     # apply play animation
+            #
+            #     self.wled_handler.play_cover(image)
+            #     # self.wled_handler.update_cover(track.cover_url)
 
             current_id = track.track_id
 
@@ -51,6 +61,8 @@ class SpotifyWLEDHTTPHandler(BaseHTTPRequestHandler):
             if remaining_time < POLLING_SECONDS and track.is_playing:
                 sleep(remaining_time)
             else:
+                # apply pause animation
+                await self.wled_handler.pause_cover(image)
                 sleep(POLLING_SECONDS)
 
     def do_POST(self):
