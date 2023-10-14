@@ -2,14 +2,17 @@
 The HTTP server for the application
 """
 import asyncio
+from enum import Enum
 from http.server import BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from time import sleep
 
 from handlers.spotify_api_handler import SpotifyAPIHandler
+from utils.common import WLEDMode
 from utils.image_utils import downscale_image
 from utils.spotify_utils import calculate_remaining_time
 
-from handlers.wled_handler import WLEDArtNet
+from handlers.wled_handler import WLEDArtNet, BaseWLEDHandler, WLEDJson
 
 # Spotify API has a rate limit per 30-second rolling window
 # so we have to be conservative in the polling frequency
@@ -20,39 +23,62 @@ from handlers.wled_handler import WLEDArtNet
 
 POLLING_SECONDS = 5  # period in seconds to poll Spotify API for changes
 
-class AsyncHTTPHandler(BaseHTTPRequestHandler):
-    def __init__(self, client_id: str, client_secret: str, wled_handler: WLEDArtNet, *args, **kwargs):
+class MainHTTPHandler(BaseHTTPRequestHandler):
+    def __init__(self, client_id: str,
+                 client_secret: str,
+                 wled_address: str,
+                 wled_mode: WLEDMode,
+                 width: int,
+                 height: int,
+                 *args, **kwargs):
         self.api_handler = SpotifyAPIHandler(client_id, client_secret)
-        self.wled_handler = wled_handler
+        self.width = width
+        self.height = height
+        self.wled_mode = wled_mode
+        self.wled_handler = self.__get_wled_handler(wled_address, wled_mode)
+
+        # needed to initialize base HTTP server class correctly
         super().__init__(*args, **kwargs)
 
-    async def _start_loop(self):
+    def __get_wled_handler(self, address: str, mode: WLEDMode):
+        if mode == WLEDMode.ARTNET:
+            return WLEDArtNet(address, self.width, self.height)
+        elif mode == WLEDMode.JSON:
+            return WLEDJson(address, self.width, self.height)
+
+    def __run_loop(self):
+        """
+        runs the correct loop functions according to given WLED handler
+        """
+        if self.wled_mode is WLEDMode.ARTNET:
+            self.__artnet_loop(self.wled_handler)
+        elif self.wled_mode is WLEDMode.JSON:
+            self.__json_loop(self.wled_handler)
+
+    def __artnet_loop(self, handler: WLEDArtNet):
+        """
+        initiates listening loop to start updating WLED target with album cover
+        """
+        while(True):
+            pass
+
+    def __json_loop(self, wled_handler: WLEDJson):
         """
         initiates listening loop to start updating WLED target with album cover
         """
         # when starting Spotify mode, turn on WLED regardless
-        self.wled_handler.on(True)
+        wled_handler.on(True)
         current_id = None
 
         while (True):
-            if not self.wled_handler.should_update():
+            if not wled_handler.should_update():
                 break
             image = self.api_handler.get_current_track_cover()
-            image = downscale_image(image, self.wled_handler.size)
 
             track = self.api_handler.get_current_track()
 
-            # first iteration, or new track
-            if track.is_playing is False:
-                await self.wled_handler.pause_cover(image)
-            else:
-                await self.wled_handler.play_cover(image)
-
-            # if current_id is None or track.track_id != current_id:
-            #     # apply play animation
-            #
-            #     self.wled_handler.play_cover(image)
-            #     # self.wled_handler.update_cover(track.cover_url)
+            if current_id is None or track.track_id != current_id:
+                wled_handler.update_cover(image)
 
             current_id = track.track_id
 
@@ -61,8 +87,6 @@ class AsyncHTTPHandler(BaseHTTPRequestHandler):
             if remaining_time < POLLING_SECONDS and track.is_playing:
                 sleep(remaining_time)
             else:
-                # apply pause animation
-                await self.wled_handler.pause_cover(image)
                 sleep(POLLING_SECONDS)
 
     def do_POST(self):
@@ -74,7 +98,7 @@ class AsyncHTTPHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-type", "text/html")
             self.end_headers()
-            self._start_loop()
+            self.__run_loop()
         elif self.path == '/stop':
             # TODO: async and stop loop (manual stop via API)
             pass
