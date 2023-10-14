@@ -43,3 +43,15 @@ def scale_brightness(image, desired_brightness):
     scaled_image.putdata(scaled_hsv_pixels)
 
     return scaled_image.convert("RGB")
+
+def image_to_rgb_array(image):
+    """
+    Takes an image, and converts it to a list of RGB values, to be used with ArtNet
+
+    :param image: input image
+    :return: list of lists of RGB values, representing the image
+    """
+    pixel_data = list(image.convert("RGB").getdata())
+
+    output = [list(pixel) for pixel in pixel_data]
+    return output
