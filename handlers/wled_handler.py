@@ -76,7 +76,7 @@ class WLEDJson(BaseWLEDHandler):
     def __init__(self, address: str, width: int, height: int):
         self.address = address
         # size in WxH format
-        super().__init__(width, height)
+        super().__init__(address, width, height)
 
         # TODO: move to image_utils
 
