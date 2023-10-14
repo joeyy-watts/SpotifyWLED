@@ -5,7 +5,7 @@ import asyncio
 
 import requests
 
-from handlers.artnet.artnet_handler import ArtNetHandler
+from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
 from utils.effects.effects import PlaybackEffects
 from utils.image_utils import download_image, downscale_image, scale_brightness
 
@@ -21,7 +21,8 @@ class BaseWLEDHandler():
     """
     Base class for WLED handlers. Contains common methods to control WLED.
     """
-    def __init__(self, width: int, height: int):
+    def __init__(self, address: str, width: int, height: int):
+        self.address = address
         # size in WxH format
         self.size = (width, height)
 
@@ -57,7 +58,7 @@ class BaseWLEDHandler():
         # 2. WLED is on, but not in "Spotify mode"
 
         # WLED is off, then just shouldn't update anymore
-        if self.__get_current_state()["on"] is False:
+        if self._get_current_state()["on"] is False:
             return False
         else:
             # TODO: have to implement some way to check if WLED is in "Spotify mode"
@@ -69,7 +70,7 @@ class BaseWLEDHandler():
         turns on/off WLED target
         """
         json = {"on": on_state}
-        self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
+        self._send_json(headers, json, WLED_JSON_UPDATE_PATH)
 
 class WLEDJson(BaseWLEDHandler):
     def __init__(self, address: str, width: int, height: int):
@@ -103,14 +104,13 @@ class WLEDJson(BaseWLEDHandler):
 
         return segmented_data
 
-    def update_cover(self, cover_url: str):
+    def update_cover(self, image):
         """
         updates WLED target with album cover
         # TODO: add some warnings (flashing light or something when API error)
         """
 
-        if cover_url is not None:
-            image = download_image(cover_url)
+        if image is not None:
             image = downscale_image(image, self.size)
 
             if ENABLE_IMAGE_BRIGHTNESS_SCALING:
@@ -123,15 +123,15 @@ class WLEDJson(BaseWLEDHandler):
                         "bri": WLED_BASE_BRIGHTNESS,
                         "seg": segment["seg"]}
                 # TODO: faster updates
-                self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
+                self._send_json(headers, json, WLED_JSON_UPDATE_PATH)
         else:
             json = {"on": False}
-            self.__send_json(headers, json, WLED_JSON_UPDATE_PATH)
+            self._send_json(headers, json, WLED_JSON_UPDATE_PATH)
 
 class WLEDArtNet(BaseWLEDHandler):
-    def __init__(self, handler: ArtNetHandler, width: int, height: int):
-        super().__init__(width, height)
-        self.handler = handler
+    def __init__(self, address: str, width: int, height: int):
+        super().__init__(address, width, height)
+        self.handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
 
     async def play_cover(self, image):
         """
