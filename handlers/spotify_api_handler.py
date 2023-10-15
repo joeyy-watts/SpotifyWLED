@@ -55,7 +55,8 @@ class SpotifyAPIHandler:
     def get_audio_features(self):
         if self.current_track is None:
             self.update_current_track()
-        return self.spotify.audio_features(self.current_track)
+
+        return self.spotify.audio_features(self.current_track.track_id)
 
     def get_current_track_cover(self):
         return self.current_track.cover_url
