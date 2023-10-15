@@ -48,7 +48,7 @@ class Effect():
         """
         factors = []
         for i in range(0, self.resolution):
-            factors.append(function(i, *args, **kwargs))
+            factors.append(function(i/self.resolution, *args, **kwargs))
         return factors
 
 
@@ -60,9 +60,9 @@ class WaveformEffects(Effect):
         - Sawtooth
         - Triangular
     """
-    def sinus(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0):
+    def sinus_raw(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, bpm: float = 130):
         """
-        Generates sinusoidal pulsate effect.
+        Generates sinusoidal pulsate effect in raw waveform.
         Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
 
         :param a: amplitude
@@ -75,6 +75,19 @@ class WaveformEffects(Effect):
             # my math has gotten worse after graduating..
             time = i * (p / self.resolution)
             return a * math.sin(2 * math.pi / p * time - h) + v
+
+        return self._calculate_factors(func)
+
+    def sinus_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5):
+        """
+        Generates a sinusoidal pulsate effect corresponding to the given BPM.
+
+        :param bpm: beats-per-minute (float)
+        :param a: amplitude of the sin wave
+        :param v: vertical shift of the sin wave
+        """
+        def func(i):
+            return a * math.sin((2 * math.pi * i * bpm) / 60) + v
 
         return self._calculate_factors(func)
 
