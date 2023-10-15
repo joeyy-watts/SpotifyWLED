@@ -39,6 +39,26 @@ class PlaybackEffects(WaveformEffects):
         :param t_audio_features: a dict containing audio features of the track being played
         :return: list of brightness factors
         """
+
+        """
+        IDEAS for using Audio Features:
+            - amplitude influenced by:
+                - loudness
+                - energy
+                - danceability
+                - bassiness (not sure which metric to use for this)
+                
+            - bpm_factor influenced by:
+                - energy
+                - danceability
+                
+            - time_signature can be used to get more accurate pulses
+            - speechiness can add varying pulses (like a sin wave on top of a sin wave?)
+            - mode (major/minor) can determine amplitude? (major = higher amplitude) or maybe contrast, etc.
+            
+        even better effects can be achieve with Audio Analysis: https://developer.spotify.com/documentation/web-api/reference/get-audio-analysis
+        but that's some time off..
+        """
         # this makes animation smoother than using raw bpm
         bpm_factor = 2
 
