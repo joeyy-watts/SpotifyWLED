@@ -1,6 +1,7 @@
 """
 Classes for interacting with Spotify API
 """
+import inspect
 import time
 
 import spotipy
@@ -37,10 +38,10 @@ class SpotifyAPIHandler:
 
     def __handle_api_interval(self):
         current_time = time.time()
-        self.last_api_call_time = current_time
         diff = current_time - self.last_api_call_time
+        self.last_api_call_time = current_time
         if diff < 5:
-            print(f"WARN - API call interval < 5s: {diff:.2f}")
+            print(f"WARN - API call interval < 5s: {diff:.2f}; caller: {inspect.stack()[1].function}")
         else:
             print(f"API call interval: {diff:.2f}")
 
