@@ -74,7 +74,6 @@ class WaveformEffects(Effect):
         :param h: horizontal shift
         """
         def func(i):
-            # TODO: revisit this so period and resolution are independent
             # my math has gotten worse after graduating..
             time = i * (p / self.resolution)
             return a * math.sin(2 * math.pi / p * time - h) + v
