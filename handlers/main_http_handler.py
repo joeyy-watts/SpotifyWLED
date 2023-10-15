@@ -8,7 +8,7 @@ from aiohttp import web
 
 from handlers.spotify_api_handler import SpotifyAPIHandler
 from utils.common import WLEDMode
-from utils.image_utils import downscale_image, image_to_rgb_array
+from utils.image_utils import downscale_image, image_to_rgb_array, download_image
 from utils.spotify_utils import calculate_remaining_time
 
 from handlers.wled_handler import WLEDArtNet, WLEDJson
@@ -36,10 +36,6 @@ class AioMainHTTPHandler():
         self.width = width
         self.height = height
         self.wled_mode = wled_mode
-        # self.wled_handler = self.__get_wled_handler(wled_address, wled_mode)
-
-    async def hello(self, request):
-        return web.Response(text="Hello, world")
 
     async def __get_wled_handler(self, address: str, mode: WLEDMode):
         # if mode == WLEDMode.ARTNET:
@@ -54,7 +50,7 @@ class AioMainHTTPHandler():
 
     async def __actual_get(self, address, mode):
         if mode == WLEDMode.ARTNET:
-            return WLEDArtNet(address, self.width, self.height)
+            return WLEDArtNet(address, self.width, self.height, self.api_handler)
         elif mode == WLEDMode.JSON:
             return WLEDJson(address, self.width, self.height)
 
@@ -75,47 +71,36 @@ class AioMainHTTPHandler():
     async def __artnet_loop(self, handler: WLEDArtNet):
         """
         initiates listening loop to start updating WLED target with album cover
+
+        for ArtNet, polling is handled by the internal WLEDArtNet async stop loops.
         """
-        print('Starting Artnet loop')
-        shown_track_id = None
         while(True):
-            print('got into loop')
+            self.api_handler.update_current_track()
             current_track = self.api_handler.get_current_track()
-            print(f"current track: {current_track}")
+
             # nothing is playing, wait and continue loop
             if current_track is None:
                 sleep(POLLING_SECONDS)
                 continue
 
-            # if track is the same, continue loop
-            if current_track.track_id == shown_track_id:
-                sleep(POLLING_SECONDS)
-                continue
-            print("after")
             # get current track cover
-            image = self.api_handler.get_current_track_cover()
+            image = download_image(current_track.cover_url)
             image = downscale_image(image, (self.width, self.height))
             image = image_to_rgb_array(image)
 
             # animate according to playback state
             if current_track.is_playing:
-                print("playing")
+                # polling goes inside the break function
                 await handler.play_cover(image)
             else:
                 await handler.pause_cover(image)
-
-            # wait until polling or track ends
-            remaining_time = calculate_remaining_time(current_track) / 1000
-
-            if remaining_time < POLLING_SECONDS and current_track.is_playing:
-                sleep(remaining_time)
-            else:
-                sleep(POLLING_SECONDS)
 
 
     async def __json_loop(self, wled_handler: WLEDJson):
         """
         initiates listening loop to start updating WLED target with album cover
+
+        for JSON, polling is handled in this class
         """
         # when starting Spotify mode, turn on WLED regardless
         wled_handler.on(True)
@@ -142,7 +127,6 @@ class AioMainHTTPHandler():
 
     def run(self, host='0.0.0.0', port=8080):
         self.app.add_routes([
-            web.get('/', self.hello),
             web.get('/start', self.__run_loop)
         ])
         web.run_app(self.app, host=host, port=port)
