@@ -1,7 +1,18 @@
 # SpotifyWLED
-A simple script to listen to the currently playing track on your Spotify account and forward it to a WLED (https://github.com/Aircoookie/WLED) LED matrix.
+A not-so-simple script to listen to the currently playing track on your Spotify account and forward it to a WLED (https://github.com/Aircoookie/WLED) LED matrix.
 
-_Note: this repo is in a very early stage; some portions are hardcoded and ad-hoc_
+
+_This was created as a fun little side project, please don't mind any less-than-stellar coding standards :)_
+
+_(maybe I'll get around to refactoring it one day..)_
+
+## Features
+- Displays the album cover of your currently playing track
+- Animations!
+  - While playing, the cover pulses to the track's tempo
+  - Also pulses slowly when the track is paused
+  - _and a lot more to come.._
+
 
 ## Usage
 1. Setup an App in your Spotify dashboard (https://developer.spotify.com/dashboard)
