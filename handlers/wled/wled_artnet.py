@@ -1,6 +1,7 @@
 import asyncio
 from enum import Enum
 
+from confs.global_confs import EFFECTS_RESOLUTION
 from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
 from handlers.spotify_api_handler import SpotifyAPIHandler, AudioFeatures
 from handlers.wled.wled_handler import BaseWLEDHandler
@@ -99,3 +100,5 @@ class WLEDArtNet(BaseWLEDHandler):
 
             for i in factors:
                 await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)] for r, g, b in image])
+                # have to await according to effect resolution
+                await asyncio.sleep(1 / EFFECTS_RESOLUTION)

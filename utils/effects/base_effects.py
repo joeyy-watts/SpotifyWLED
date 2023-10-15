@@ -4,12 +4,15 @@ Classes for low-level effects (i.e. effects from pure waveforms)
 import math
 from typing import Callable
 
+from confs.global_confs import EFFECTS_RESOLUTION
+
+
 # TODO: move math-related functions to dedicated module
 # TODO: refactor so that wave functions can be plugged into effects
 # TODO: effect layering
 
 class Effect():
-    def __init__(self, width: int, height: int, resolution: int = 100):
+    def __init__(self, width: int, height: int):
         """
         Base class for all effects
 
@@ -20,7 +23,7 @@ class Effect():
             calculated according to each effect's formula to avoid the waveform
             being clipped.
         """
-        self.resolution = resolution
+        self.resolution = EFFECTS_RESOLUTION
 
     def _get_effect(self, mode):
         """
