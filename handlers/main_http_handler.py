@@ -38,14 +38,8 @@ class AioMainHTTPHandler():
         self.wled_mode = wled_mode
 
     async def __get_wled_handler(self, address: str, mode: WLEDMode):
-        # if mode == WLEDMode.ARTNET:
-        #     return WLEDArtNet(address, self.width, self.height)
-        # elif mode == WLEDMode.JSON:
-        #     return WLEDJson(address, self.width, self.height)
-        print("getting wled handler")
         task = asyncio.create_task(self.__actual_get(address, mode))
         await task
-        print(f"got ret {task}")
         return task.result()
 
     async def __actual_get(self, address, mode):
