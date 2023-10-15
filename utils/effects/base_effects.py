@@ -78,6 +78,23 @@ class WaveformEffects(Effect):
 
         return self._calculate_factors(func)
 
+    def trunc_sinus_raw(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, upper: bool = True):
+        """
+        Generates truncated sinusoidal pulsate effect.
+        Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
+
+        :param a: amplitude
+        :param p: period
+        :param v: vertical shift
+        :param h: horizontal shift
+        :param upper: if True, returns the upper half of the sinusoidal wave
+        """
+        def func(i):
+            time = i * (p / self.resolution)
+            return abs(a * math.sin(2 * math.pi / p * time - h)) + v
+
+        return self._calculate_factors(func)
+
     def sinus_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5):
         """
         Generates a sinusoidal pulsate effect corresponding to the given BPM.
@@ -91,20 +108,19 @@ class WaveformEffects(Effect):
 
         return self._calculate_factors(func)
 
-    def trunc_sinus(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, upper: bool = True):
+    def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, upper: bool = True):
         """
         Generates truncated sinusoidal pulsate effect.
-        Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
+        With the crest corresponding to the BPM.
 
+        :param bpm: beats-per-minute (float)
         :param a: amplitude
-        :param p: period
         :param v: vertical shift
         :param h: horizontal shift
         :param upper: if True, returns the upper half of the sinusoidal wave
         """
         def func(i):
-            time = i * ((p/2) / self.resolution)
-            return a * math.sin(2 * math.pi / p * time - h) + v
+            return abs(a * math.sin((2 * math.pi * i * bpm) / 60)) + v
 
         return self._calculate_factors(func)
 
