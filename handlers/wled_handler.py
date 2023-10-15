@@ -206,6 +206,16 @@ class WLEDArtNet(BaseWLEDHandler):
         while True:
             # check for stop event
             if stop_event.is_set():
+                # TODO:
+                # if stop event is set for PLAYING state, it means:
+                #   - song has changed -> break into outer loop to update cover
+                #   - song is now paused -> change state ONLY
+                # if stop event is set for PAUSED state:
+                #   - song has changed -> break into outer loop to update cover
+                #   - song is now playing -> change state ONLY
+                # so, if still same song, no need to break into outer loop
+                # just need to change play state
+
                 stop_event.clear()
                 break
 
