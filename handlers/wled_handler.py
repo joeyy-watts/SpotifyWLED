@@ -2,10 +2,12 @@
 Class to interact with WLED server
 """
 import asyncio
+from enum import Enum
 
 import requests
 
 from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
+from handlers.spotify_api_handler import SpotifyAPIHandler
 from utils.effects.effects import PlaybackEffects
 from utils.image_utils import download_image, downscale_image, scale_brightness
 
@@ -129,8 +131,15 @@ class WLEDJson(BaseWLEDHandler):
             self._send_json(headers, json, WLED_JSON_UPDATE_PATH)
 
 class WLEDArtNet(BaseWLEDHandler):
-    def __init__(self, address: str, width: int, height: int):
+
+    class WLEDState(Enum):
+        PLAYING = 0
+        PAUSED = 1
+
+    def __init__(self, address: str, width: int, height: int, spotify_handler: SpotifyAPIHandler):
         super().__init__(address, width, height)
+        self.api_handler = spotify_handler
+        self.current_tid = self.api_handler.get_current_track().track_id
         self.handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
 
     async def play_cover(self, image):
@@ -140,7 +149,7 @@ class WLEDArtNet(BaseWLEDHandler):
         :return: an asyncio task
         """
         factors = PlaybackEffects(self.size[0], self.size[1]).generic_play()
-        return await asyncio.create_task(self.__animate_cover_task(image, factors))
+        return await asyncio.create_task(self.__animate_cover_task(image, factors, WLEDArtNet.WLEDState.PLAYING))
 
     async def pause_cover(self, image):
         """
@@ -149,15 +158,56 @@ class WLEDArtNet(BaseWLEDHandler):
         :return: an asyncio task
         """
         factors = PlaybackEffects(self.size[0], self.size[1]).pause()
-        return await asyncio.create_task(self.__animate_cover_task(image, factors))
+        return await asyncio.create_task(self.__animate_cover_task(image, factors, WLEDArtNet.WLEDState.PAUSED))
 
-    async def __animate_cover_task(self, image, factors):
+    async def __stop_loop(self, stop_event, state: WLEDState):
+        self.current_tid = self.api_handler.current_track.track_id
+        while not await self.__should_stop(state):
+            # update current track every stop lop
+            self.api_handler.update_current_track()
+
+            # TODO: change this to use global POLLING_SECONDS
+            await asyncio.sleep(5)
+
+        stop_event.set()
+
+    async def __should_stop(self, state: WLEDState):
+        current_track = self.api_handler.get_current_track()
+        if state == WLEDArtNet.WLEDState.PLAYING:
+            # if current state is playing, the loop should break if:
+            #   - track is now paused
+            #   - track has changed
+            if not current_track.is_playing \
+                    or current_track.track_id != self.current_tid:
+                return True
+
+        if state == WLEDArtNet.WLEDState.PAUSED:
+            # if current state is paused, the loop should break if:
+            #   - track is now playing
+            #   - track has changed, even if paused
+            #   - TODO: if WLED is powered off
+            if current_track.is_playing \
+                    or current_track.track_id != self.current_tid:
+                return True
+
+        return False
+
+    async def __animate_cover_task(self, image, factors, state):
         """
         an asyncio task to animate cover in the background
-        :param track: currently track
+        :param image: image to animate
         :param factors: the animation factors to be applied to the cover
         :return: asyncio coroutine
         """
+        # setup stop event
+        stop_event = asyncio.Event()
+        asyncio.create_task(self.__stop_loop(stop_event, state))
+
         while True:
+            # check for stop event
+            if stop_event.is_set():
+                stop_event.clear()
+                break
+
             for i in factors:
                 await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)] for r, g, b in image])
