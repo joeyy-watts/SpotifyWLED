@@ -76,10 +76,12 @@ class AioMainHTTPHandler():
 
         for ArtNet, polling is handled by the internal WLEDArtNet async stop loops.
         """
-        while(True):
-            self.api_handler.update_current_track()
-            current_track = self.api_handler.get_current_track()
+        # update for initial loop only
+        # subsequent updates are handled in WLEDArtNet handler
+        self.api_handler.update_current_track()
 
+        while(True):
+            current_track = self.api_handler.get_current_track()
             # nothing is playing, wait and continue loop
             if current_track is None:
                 sleep(POLLING_SECONDS)
