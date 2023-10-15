@@ -39,4 +39,7 @@ class PlaybackEffects(WaveformEffects):
         :param t_audio_features: a dict containing audio features of the track being played
         :return: list of brightness factors
         """
-        return self.sinus_bpm(bpm=t_audio_features.tempo, a=0.3, v=0.6)
+        # this makes animation smoother than using raw bpm
+        bpm_factor = 2
+
+        return self.sinus_bpm(bpm=t_audio_features.tempo/bpm_factor, a=0.3, v=0.6)
