@@ -37,6 +37,8 @@ class AioMainHTTPHandler():
         self.height = height
         self.wled_mode = wled_mode
 
+        self.animation_loop = None
+
     async def __get_wled_handler(self, address: str, mode: WLEDMode):
         task = asyncio.create_task(self.__actual_get(address, mode))
         await task
@@ -52,15 +54,21 @@ class AioMainHTTPHandler():
         """
         runs the correct loop functions according to given WLED handler
         """
-        print("running loop!")
         task = asyncio.create_task(self.__get_wled_handler(self.address, self.wled_mode))
         await task
         if self.wled_mode is WLEDMode.ARTNET:
-            await self.__artnet_loop(task.result())
+            self.animation_loop = asyncio.create_task(self.__artnet_loop(task.result()))
         elif self.wled_mode is WLEDMode.JSON:
-            await self.__json_loop(task.result())
+            self.animation_loop = asyncio.create_task(self.__json_loop(task.result()))
 
         return web.Response(text="Started loop")
+
+    async def __stop_loop(self, request):
+        """
+        stop running animation loop, if any
+        """
+        # to be implemented
+        return web.Response(status=501, text="Not implemented yet")
 
     async def __artnet_loop(self, handler: WLEDArtNet):
         """
@@ -88,7 +96,6 @@ class AioMainHTTPHandler():
                 await handler.play_cover(image)
             else:
                 await handler.pause_cover(image)
-
 
     async def __json_loop(self, wled_handler: WLEDJson):
         """
@@ -121,6 +128,7 @@ class AioMainHTTPHandler():
 
     def run(self, host='0.0.0.0', port=8080):
         self.app.add_routes([
-            web.get('/start', self.__run_loop)
+            web.get('/start', self.__run_loop),
+            web.get('/stop', self.__stop_loop)
         ])
         web.run_app(self.app, host=host, port=port)
