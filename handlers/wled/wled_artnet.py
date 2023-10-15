@@ -2,7 +2,7 @@ import asyncio
 from enum import Enum
 
 from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
-from handlers.spotify_api_handler import SpotifyAPIHandler
+from handlers.spotify_api_handler import SpotifyAPIHandler, AudioFeatures
 from handlers.wled.wled_handler import BaseWLEDHandler
 from utils.effects.effects import PlaybackEffects
 
@@ -19,13 +19,14 @@ class WLEDArtNet(BaseWLEDHandler):
         self.current_tid = self.api_handler.get_current_track().track_id
         self.handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
 
-    async def play_cover(self, image):
+    async def play_cover(self, image, t_audio_features: AudioFeatures):
         """
         applies the playing animation to the given cover
         :param image: current track
+        :param t_audio_features: a dict containing audio features of the track
         :return: an asyncio task
         """
-        factors = PlaybackEffects(self.size[0], self.size[1]).generic_play()
+        factors = PlaybackEffects(self.size[0], self.size[1]).bpm_play(t_audio_features)
         return await asyncio.create_task(self.__animate_cover_task(image, factors, WLEDArtNet.WLEDState.PLAYING))
 
     async def pause_cover(self, image):

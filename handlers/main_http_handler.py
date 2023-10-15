@@ -95,7 +95,7 @@ class AioMainHTTPHandler():
             # animate according to playback state
             if current_track.is_playing:
                 # polling goes inside the break function
-                await handler.play_cover(image)
+                await handler.play_cover(image, self.api_handler.get_audio_features())
             else:
                 await handler.pause_cover(image)
 

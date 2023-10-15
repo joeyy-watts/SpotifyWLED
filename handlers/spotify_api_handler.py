@@ -2,6 +2,7 @@
 Classes for interacting with Spotify API
 """
 import inspect
+import pprint
 import time
 
 import spotipy
@@ -45,9 +46,14 @@ class AudioFeatures:
     def empty(cls):
         return AudioFeatures(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-    @classmethod
-    def is_none(cls):
-        return all(value == 0.0 if isinstance(value, float) else value == 0 for value in cls.__dict__.values())
+    def is_none(self):
+        attributes = [
+            self.danceability, self.energy, self.key, self.loudness, self.mode,
+            self.speechiness, self.acousticness, self.instrumentalness,
+            self.liveness, self.valence, self.tempo
+        ]
+
+        return all(value == 0.0 if isinstance(value, float) else value == 0 for value in attributes)
 
     @classmethod
     def from_dict(cls, audio_features_dict: dict):
@@ -96,9 +102,9 @@ class SpotifyAPIHandler:
         if self.current_track is None:
             self.update_current_track()
 
-        if self.audio_features.is_none():
-            json = self.spotify.audio_features(self.current_track.track_id)
-            self.audio_features = AudioFeatures.from_dict(json[0])
+        # TODO: implement caching to avoid unnecessary API calls
+        json = self.spotify.audio_features(self.current_track.track_id)
+        self.audio_features = AudioFeatures.from_dict(json[0])
 
         return self.audio_features
 
