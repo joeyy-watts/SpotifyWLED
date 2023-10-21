@@ -6,6 +6,7 @@ from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
 from handlers.spotify_api_handler import SpotifyAPIHandler, AudioFeatures
 from handlers.wled.wled_handler import BaseWLEDHandler
 from utils.effects.effects import PlaybackEffects
+from utils.effects.effects_utils import is_black
 
 
 class WLEDArtNet(BaseWLEDHandler):
@@ -46,7 +47,7 @@ class WLEDArtNet(BaseWLEDHandler):
             self.api_handler.update_current_track()
 
             # TODO: change this to use global POLLING_SECONDS
-            await asyncio.sleep(5)
+            await asyncio.sleep(3)
 
         stop_event.set()
 
@@ -99,6 +100,9 @@ class WLEDArtNet(BaseWLEDHandler):
                 break
 
             for i in factors:
-                await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)] for r, g, b in image])
+                await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)]
+                                               if not is_black((r,g,b)) else
+                                               [int(r), int(g), int(b)]
+                                                for r, g, b in image])
                 # have to await according to effect resolution
                 await asyncio.sleep(1 / EFFECTS_RESOLUTION)
