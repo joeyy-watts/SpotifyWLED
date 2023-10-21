@@ -94,6 +94,7 @@ class SpotifyAPIHandler:
     def update_current_track(self):
         self.__handle_api_interval()
         self.current_track = TrackObject(self.spotify.currently_playing())
+        return self.current_track
 
     def get_current_track(self):
         return self.current_track
