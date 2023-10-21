@@ -1,8 +1,20 @@
 import io
+from enum import Enum
 
 import requests
 from PIL import Image
 
+
+def get_cover(url: str, size: (int, int)):
+    """
+    Downloads and processes image from given URL to be displayed on matrix.
+    :param url: image URL
+    :param size: tuple of (width, height) of image
+    :return: [R, G, B] array of pixels
+    """
+    image = download_image(url)
+    image = downscale_image(image, (size[0], size[1]))
+    return image_to_rgb_array(image)
 
 def download_image(url: str):
     response = requests.get(url)
