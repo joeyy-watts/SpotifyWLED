@@ -87,17 +87,9 @@ class AioMainHTTPHandler():
                 sleep(POLLING_SECONDS)
                 continue
 
-            # get current track cover
-            image = download_image(current_track.cover_url)
-            image = downscale_image(image, (self.width, self.height))
-            image = image_to_rgb_array(image)
-
             # animate according to playback state
             if current_track.is_playing:
-                # polling goes inside the break function
-                await handler.play_cover(image, self.api_handler.get_audio_features())
-            else:
-                await handler.pause_cover(image)
+                await handler.animate()
 
     async def __json_loop(self, wled_handler: WLEDJson):
         """

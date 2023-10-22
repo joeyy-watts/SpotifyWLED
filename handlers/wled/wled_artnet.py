@@ -7,6 +7,7 @@ from handlers.spotify_api_handler import SpotifyAPIHandler, AudioFeatures
 from handlers.wled.wled_handler import BaseWLEDHandler
 from utils.effects.effects import PlaybackEffects
 from utils.effects.effects_utils import is_black
+from utils.image_utils import get_cover
 
 
 class WLEDArtNet(BaseWLEDHandler):
@@ -20,8 +21,22 @@ class WLEDArtNet(BaseWLEDHandler):
         self.api_handler = spotify_handler
         self.current_tid = self.api_handler.get_current_track().track_id
         self.handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
+        self.animating_track = None
 
-    async def play_cover(self, image, t_audio_features: AudioFeatures):
+    async def animate(self):
+        while(True):
+            # update current track
+            current_track = self.api_handler.update_current_track()
+
+            # run appropriate animation (play/pause)
+            if current_track.is_playing:
+                self.animating_track = current_track
+                await self.__play_cover(get_cover(self.api_handler.get_current_track_cover(), self.size), self.api_handler.get_audio_features())
+            else:
+                self.animating_track = current_track
+                await self.__pause_cover(get_cover(self.api_handler.get_current_track_cover(), self.size))
+
+    async def __play_cover(self, image, t_audio_features: AudioFeatures):
         """
         applies the playing animation to the given cover
         :param image: current track
@@ -31,7 +46,7 @@ class WLEDArtNet(BaseWLEDHandler):
         factors = PlaybackEffects(self.size[0], self.size[1]).bpm_play(t_audio_features)
         return await asyncio.create_task(self.__animate_cover_task(image, factors, WLEDArtNet.WLEDState.PLAYING))
 
-    async def pause_cover(self, image):
+    async def __pause_cover(self, image):
         """
         applies the paused animation to the given cover
         :param image: current track
@@ -97,12 +112,17 @@ class WLEDArtNet(BaseWLEDHandler):
                 # just need to change play state
 
                 stop_event.clear()
+                # second break; break animation loop itself
                 break
-
-            for i in factors:
-                await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)]
-                                               if not is_black((r,g,b)) else
-                                               [int(r), int(g), int(b)]
-                                                for r, g, b in image])
-                # have to await according to effect resolution
-                await asyncio.sleep(1 / EFFECTS_RESOLUTION)
+            else:
+                for i in factors:
+                    # first break; break the animation cycle
+                    if stop_event.is_set():
+                        break
+                    # TODO: refactor into separate function
+                    await self.handler.set_pixels([[int(r*i), int(g*i), int(b*i)]
+                                                   if not is_black((r,g,b)) else
+                                                   [int(r), int(g), int(b)]
+                                                    for r, g, b in image])
+                    # have to await according to effect resolution
+                    await asyncio.sleep(1 / EFFECTS_RESOLUTION)
