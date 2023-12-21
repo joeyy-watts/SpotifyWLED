@@ -116,6 +116,10 @@ class WLEDArtNet(BaseWLEDHandler):
                 break
             else:
                 for i in factors:
+                    # TODO: for brighter pixels, apply factor at 1.0 multiplier
+                    # for darker pixels, apply factor scaled to absolute brightness
+
+
                     # first break; break the animation cycle
                     if stop_event.is_set():
                         break
