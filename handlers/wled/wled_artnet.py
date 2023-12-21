@@ -1,7 +1,7 @@
 import asyncio
 from enum import Enum
 
-from confs.global_confs import EFFECTS_RESOLUTION
+from confs.global_confs import TARGET_FPS
 from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
 from handlers.spotify_api_handler import SpotifyAPIHandler, AudioFeatures
 from handlers.wled.wled_handler import BaseWLEDHandler
@@ -128,5 +128,7 @@ class WLEDArtNet(BaseWLEDHandler):
                                                    if not is_black((r,g,b)) else
                                                    [int(r), int(g), int(b)]
                                                     for r, g, b in image])
-                    # have to await according to effect resolution
-                    await asyncio.sleep(1 / EFFECTS_RESOLUTION)
+
+                    # have to await according to target FPS
+                    # TODO: replace 1 second with closest appropriate value to avoid wave clipping
+                    await asyncio.sleep(1 / TARGET_FPS)

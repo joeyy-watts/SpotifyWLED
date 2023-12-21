@@ -4,7 +4,7 @@ Classes for low-level effects (i.e. effects from pure waveforms)
 import math
 from typing import Callable
 
-from confs.global_confs import EFFECTS_RESOLUTION
+from confs.global_confs import TARGET_FPS
 
 
 # TODO: move math-related functions to dedicated module
@@ -23,7 +23,7 @@ class Effect():
             calculated according to each effect's formula to avoid the waveform
             being clipped.
         """
-        self.resolution = EFFECTS_RESOLUTION
+        self.target_fps = TARGET_FPS
 
     def _get_effect(self, mode):
         """
@@ -41,17 +41,18 @@ class Effect():
 
     def _calculate_factors(self, function: Callable[..., list[float]], *args, **kwargs):
         """
-        calculates the factors for the effect
+        Calculates the brightness factors for the effect.
 
-        :param resolution: effect resolution
+        Number of factors is always equal to the target FPS.
+
         :param function: function used to calculate factors
         :param args: arguments for `function`
         :param kwargs: keyword arguments for `function`
         :return: a list of RGB values to multiply the image with
         """
         factors = []
-        for i in range(0, self.resolution):
-            factors.append(function(i/self.resolution, *args, **kwargs))
+        for i in range(0, self.target_fps):
+            factors.append(function(i / self.target_fps, *args, **kwargs))
         return factors
 
 
@@ -74,13 +75,11 @@ class WaveformEffects(Effect):
         :param h: horizontal shift
         """
         def func(i):
-            # my math has gotten worse after graduating..
-            time = i * (p / self.resolution)
-            return a * math.sin(2 * math.pi / p * time - h) + v
+            return a * math.sin((2 * math.pi / p) * i - h) + v
 
         return self._calculate_factors(func)
 
-    def trunc_sinus_raw(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, upper: bool = True):
+    def trunc_sinus_raw(self, a: float = 0.5, p: float = 2, v: float = 0.5, h: float = 0, invert: bool = False):
         """
         Generates truncated sinusoidal pulsate effect.
         Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
@@ -92,8 +91,9 @@ class WaveformEffects(Effect):
         :param upper: if True, returns the upper half of the sinusoidal wave
         """
         def func(i):
-            time = i * (p / self.resolution)
-            return abs(a * math.sin(2 * math.pi / p * time - h)) + v
+            invert_factor = -1 if invert else 1
+
+            return invert_factor * abs(a * math.sin((2 * math.pi) / p * i - h)) + v
 
         return self._calculate_factors(func)
 
@@ -113,7 +113,7 @@ class WaveformEffects(Effect):
     def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, invert: bool = False):
         """
         Generates truncated sinusoidal pulsate effect.
-        With the crest corresponding to the BPM.
+        Each crest corresponds to one single beat.
 
         :param bpm: beats-per-minute (float)
         :param a: amplitude
@@ -124,7 +124,8 @@ class WaveformEffects(Effect):
         invert_factor = -1 if invert else 1
 
         def func(i):
-            return invert_factor * abs(a * math.sin((2 * math.pi * i * bpm) / 60)) + v
+            # 60 seconds is multiplied by 2 to account for the second crest of the sine wave
+            return invert_factor * abs(a * math.sin((2 * math.pi * i * bpm) / (60 * 2))) + v
 
         return self._calculate_factors(func)
 
@@ -137,7 +138,8 @@ class WaveformEffects(Effect):
         :param v: vertical shift
         """
         def func(i):
-            time = (i / self.resolution) * p
+            time = (i / self.target_fps) * p
+            # TODO: fix this calculation and remove time
             return a * (2 * (time / p - math.floor(0.5 + time / p))) + v
 
         return self._calculate_factors(func)
