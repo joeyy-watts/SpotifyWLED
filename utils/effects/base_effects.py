@@ -10,8 +10,17 @@ from confs.global_confs import TARGET_FPS
 # TODO: move math-related functions to dedicated module
 # TODO: refactor so that wave functions can be plugged into effects
 # TODO: effect layering
+class EffectData:
+    """
+    Data class for effects.
+        - factors: list containing brightness factors for each frame
+        - period: period of the waveform (in seconds)
+    """
+    def __init__(self, factors: list[float], period: float):
+        self.factors = factors
+        self.period = period
 
-class Effect():
+class Effect:
     def __init__(self, width: int, height: int):
         """
         Base class for all effects
@@ -39,21 +48,20 @@ class Effect():
         """
         raise NotImplementedError
 
-    def _calculate_factors(self, function: Callable[..., list[float]], *args, **kwargs):
+    def _calculate_effect(self, function: Callable[..., list[float]], period):
         """
-        Calculates the brightness factors for the effect.
+        Calculates the required data for effects.
 
-        Number of factors is always equal to the target FPS.
+        Number of brightness factors is always equal to the target FPS.
 
         :param function: function used to calculate factors
-        :param args: arguments for `function`
-        :param kwargs: keyword arguments for `function`
-        :return: a list of RGB values to multiply the image with
+        :param period: the period of the effect's waveform
+        :return: EffectData object with brightness factors and period
         """
         factors = []
         for i in range(0, self.target_fps):
-            factors.append(function(i / self.target_fps, *args, **kwargs))
-        return factors
+            factors.append(function(period * (i / self.target_fps)))
+        return EffectData(factors, period)
 
 
 class WaveformEffects(Effect):
@@ -63,6 +71,10 @@ class WaveformEffects(Effect):
         - Sinusoidal
         - Sawtooth
         - Triangular
+
+    To avoid confusion, "period" refers to the mathematical definition of:
+        - Given the equation y = sin(Ax), Period = 2pi / |A|
+    Hence the funny-looking equations.
     """
     def sinus_raw(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, bpm: float = 130):
         """
@@ -74,10 +86,12 @@ class WaveformEffects(Effect):
         :param v: vertical shift
         :param h: horizontal shift
         """
-        def func(i):
-            return a * math.sin((2 * math.pi / p) * i - h) + v
+        period = 1 / p
 
-        return self._calculate_factors(func)
+        def func(i):
+            return a * math.sin((2 * math.pi / period) * i - h) + v
+
+        return self._calculate_effect(func, period)
 
     def trunc_sinus_raw(self, a: float = 0.5, p: float = 2, v: float = 0.5, h: float = 0, invert: bool = False):
         """
@@ -85,17 +99,18 @@ class WaveformEffects(Effect):
         Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
 
         :param a: amplitude
-        :param p: period
+        :param p: period / 2pi
         :param v: vertical shift
         :param h: horizontal shift
         :param upper: if True, returns the upper half of the sinusoidal wave
         """
+        invert_factor = -1 if invert else 1
+        period = (1 / p)
+
         def func(i):
-            invert_factor = -1 if invert else 1
+            return invert_factor * abs(a * math.sin((2 * math.pi / period) * i - h)) + v
 
-            return invert_factor * abs(a * math.sin((2 * math.pi) / p * i - h)) + v
-
-        return self._calculate_factors(func)
+        return self._calculate_effect(func, period)
 
     def sinus_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5):
         """
@@ -105,10 +120,11 @@ class WaveformEffects(Effect):
         :param a: amplitude of the sin wave
         :param v: vertical shift of the sin wave
         """
+        period = 1 / (bpm / 60)
         def func(i):
-            return a * math.sin((2 * math.pi * i * bpm) / 60) + v
+            return a * math.sin((2 * math.pi / period) * i) + v
 
-        return self._calculate_factors(func)
+        return self._calculate_effect(func, period)
 
     def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, invert: bool = False):
         """
@@ -119,15 +135,15 @@ class WaveformEffects(Effect):
         :param a: amplitude
         :param v: vertical shift
         :param h: horizontal shift
-        :param upper: if True, returns the upper half of the sinusoidal wave
+        :param invert: if True, inverts the waveform
         """
         invert_factor = -1 if invert else 1
+        period = 1 / (bpm / (60 * 2))
 
         def func(i):
-            # 60 seconds is multiplied by 2 to account for the second crest of the sine wave
-            return invert_factor * abs(a * math.sin((2 * math.pi * i * bpm) / (60 * 2))) + v
+            return invert_factor * abs(a * math.sin((2 * math.pi / period) * i)) + v
 
-        return self._calculate_factors(func)
+        return self._calculate_effect(func, period)
 
     def sawtooth(self, a, p, v):
         """
@@ -137,12 +153,14 @@ class WaveformEffects(Effect):
         :param p: period
         :param v: vertical shift
         """
-        def func(i):
-            time = (i / self.target_fps) * p
-            # TODO: fix this calculation and remove time
-            return a * (2 * (time / p - math.floor(0.5 + time / p))) + v
+        period = 1
 
-        return self._calculate_factors(func)
+        def func(i):
+            # need this to shift sawtooth so it starts at 0
+            phase_shifted_i = i - 0.5
+            return a * (2 * (phase_shifted_i - math.floor(0.5 + phase_shifted_i))) + v
+
+        return self._calculate_effect(func, period)
 
 class ScaleEffects(Effect):
     """

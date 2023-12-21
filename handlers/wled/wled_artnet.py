@@ -5,6 +5,7 @@ from confs.global_confs import TARGET_FPS
 from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
 from handlers.spotify_api_handler import SpotifyAPIHandler, AudioFeatures
 from handlers.wled.wled_handler import BaseWLEDHandler
+from utils.effects.base_effects import EffectData
 from utils.effects.effects import PlaybackEffects
 from utils.effects.effects_utils import is_black
 from utils.image_utils import get_cover
@@ -87,11 +88,11 @@ class WLEDArtNet(BaseWLEDHandler):
 
         return False
 
-    async def __animate_cover_task(self, image, factors, state):
+    async def __animate_cover_task(self, image, effect_data: EffectData, state):
         """
         an asyncio task to animate cover in the background
         :param image: image to animate
-        :param factors: the animation factors to be applied to the cover
+        :param effect_data: the EffectData object for a given calculated effect
         :return: asyncio coroutine
         """
         # setup stop event
@@ -115,7 +116,7 @@ class WLEDArtNet(BaseWLEDHandler):
                 # second break; break animation loop itself
                 break
             else:
-                for i in factors:
+                for i in effect_data.factors:
                     # TODO: for brighter pixels, apply factor at 1.0 multiplier
                     # for darker pixels, apply factor scaled to absolute brightness
 
@@ -131,4 +132,4 @@ class WLEDArtNet(BaseWLEDHandler):
 
                     # have to await according to target FPS
                     # TODO: replace 1 second with closest appropriate value to avoid wave clipping
-                    await asyncio.sleep(1 / TARGET_FPS)
+                    await asyncio.sleep(effect_data.period / TARGET_FPS)
