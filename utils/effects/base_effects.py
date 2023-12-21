@@ -110,7 +110,7 @@ class WaveformEffects(Effect):
 
         return self._calculate_factors(func)
 
-    def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, upper: bool = True):
+    def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, invert: bool = False):
         """
         Generates truncated sinusoidal pulsate effect.
         With the crest corresponding to the BPM.
@@ -121,8 +121,10 @@ class WaveformEffects(Effect):
         :param h: horizontal shift
         :param upper: if True, returns the upper half of the sinusoidal wave
         """
+        invert_factor = -1 if invert else 1
+
         def func(i):
-            return abs(a * math.sin((2 * math.pi * i * bpm) / 60)) + v
+            return invert_factor * abs(a * math.sin((2 * math.pi * i * bpm) / 60)) + v
 
         return self._calculate_factors(func)
 

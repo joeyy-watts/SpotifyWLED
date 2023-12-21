@@ -33,7 +33,7 @@ class PlaybackEffects(WaveformEffects):
         """
         return self.sinus_raw(a=0.3, p=period, v=0.5)
 
-    def bpm_play(self, t_audio_features: AudioFeatures):
+    def bpm_play(self, t_audio_features: AudioFeatures, invert: bool = False):
         """
         A playing animation that pulsates according to the music BPM
         :param t_audio_features: a dict containing audio features of the track being played
@@ -64,4 +64,4 @@ class PlaybackEffects(WaveformEffects):
         but that's some time off..
         """
 
-        return self.trunc_sinuc_bpm(bpm=t_audio_features.tempo, a=0.3, v=0.6)
+        return self.trunc_sinuc_bpm(bpm=t_audio_features.tempo, a=0.3, v=0.6, invert=invert)
