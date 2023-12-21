@@ -74,6 +74,8 @@ class AioMainHTTPHandler():
         """
         initiates listening loop to start updating WLED target with album cover
 
+        if nothing is playing, displays the Spotify logo
+
         for ArtNet, polling is handled by the internal WLEDArtNet async stop loops.
         """
         # update for initial loop only
