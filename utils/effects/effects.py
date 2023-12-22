@@ -4,7 +4,7 @@ Classes for high-level effects
 from math import floor
 
 from handlers.spotify_api_handler import AudioFeatures
-from utils.effects.base_effects import WaveformEffects
+from utils.effects.base_effects import WaveformEffects, EffectData
 
 
 class PlaybackEffects(WaveformEffects):
@@ -18,12 +18,16 @@ class PlaybackEffects(WaveformEffects):
         :param breathe_count: number of times to "breathe"
         :return: list of brightness factors
         """
-        main_pulse = self.sinus_raw(a=0.5, p=2, v=0.5)
-        breathe_pulse = self.trunc_sinus_raw(a=0.3, p=0.0001, v=0.7)
-        crest_idx = floor(len(main_pulse) / 4)
+        # TODO: improve this a bit more
+        main_pulse = self.sinus_raw(a=0.3, p=2, v=0.7)
+        breathe_pulse = self.trunc_sinus_raw(a=0.3, p=1, v=0.7)
+
+        crest_idx = floor(len(main_pulse.factors) / 4)
+
+        spliced_wave = main_pulse.factors[:crest_idx] + (breathe_pulse.factors) + main_pulse.factors[crest_idx:]
 
         # splice the main pulse with breathing at the crest
-        return main_pulse[:crest_idx] + (breathe_pulse * breathe_count) + main_pulse[crest_idx:]
+        return EffectData(spliced_wave, main_pulse.period + breathe_pulse.period)
 
     def generic_play(self, period: float = 0.5):
         """
