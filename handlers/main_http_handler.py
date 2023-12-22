@@ -9,7 +9,6 @@ from aiohttp import web
 from handlers.spotify_api_handler import SpotifyAPIHandler
 from handlers.wled import WLEDArtNet, WLEDJson
 from utils.common import WLEDMode
-from utils.image_utils import downscale_image, image_to_rgb_array, download_image
 from utils.spotify_utils import calculate_remaining_time
 
 
