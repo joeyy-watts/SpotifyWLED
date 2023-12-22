@@ -10,6 +10,8 @@ from utils.effects.effects import PlaybackEffects
 from utils.effects.effects_utils import is_black
 from utils.image_utils import get_cover
 
+# TODO: find better image for idle animation
+IDLE_IMAGE = 'https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs'
 
 class WLEDArtNet(BaseWLEDHandler):
 
@@ -28,6 +30,11 @@ class WLEDArtNet(BaseWLEDHandler):
         while(True):
             # update current track
             current_track = self.api_handler.update_current_track()
+
+            # TODO: add idle animation with Spotify logo: https://storage.googleapis.com/pr-newsroom-wp/1/2021/02/Spotify_Icon_RGB_Green.png
+            if current_track.track_id is None:
+                print("No track playing, displaying idle image")
+                await self.__pause_cover(get_cover(IDLE_IMAGE, self.size))
 
             # run appropriate animation (play/pause)
             if current_track.is_playing:
