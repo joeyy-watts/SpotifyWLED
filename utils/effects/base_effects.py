@@ -76,7 +76,7 @@ class WaveformEffects(Effect):
         - Given the equation y = sin(Ax), Period = 2pi / |A|
     Hence the funny-looking equations.
     """
-    def sinus_raw(self, a: float = 0.5, p: float = 2 * math.pi, v: float = 0.5, h: float = 0, bpm: float = 130):
+    def sinus_raw(self, a: float = 0.5, p: float = 2, v: float = 0.5, h: float = 0):
         """
         Generates sinusoidal pulsate effect in raw waveform.
         Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
@@ -86,12 +86,11 @@ class WaveformEffects(Effect):
         :param v: vertical shift
         :param h: horizontal shift
         """
-        period = 1 / p
 
         def func(i):
-            return a * math.sin((2 * math.pi / period) * i - h) + v
+            return a * math.sin((2 * math.pi / p) * i - h) + v
 
-        return self._calculate_effect(func, period)
+        return self._calculate_effect(func, p)
 
     def trunc_sinus_raw(self, a: float = 0.5, p: float = 2, v: float = 0.5, h: float = 0, invert: bool = False):
         """
@@ -99,18 +98,17 @@ class WaveformEffects(Effect):
         Defaults generate a standard sin-wave with 0.5 vertical offset, and 2pi period
 
         :param a: amplitude
-        :param p: period / 2pi
+        :param p: period
         :param v: vertical shift
         :param h: horizontal shift
         :param upper: if True, returns the upper half of the sinusoidal wave
         """
         invert_factor = -1 if invert else 1
-        period = (1 / p)
 
         def func(i):
-            return invert_factor * abs(a * math.sin((2 * math.pi / period) * i - h)) + v
+            return invert_factor * abs(a * math.sin((2 * math.pi / p) * i - h)) + v
 
-        return self._calculate_effect(func, period)
+        return self._calculate_effect(func, p)
 
     def sinus_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5):
         """
