@@ -19,8 +19,8 @@ class PlaybackEffects(WaveformEffects):
         :return: list of brightness factors
         """
         # TODO: improve this a bit more
-        main_pulse = self.sinus_raw(a=0.3, p=2, v=0.7)
-        breathe_pulse = self.trunc_sinus_raw(a=0.3, p=1, v=0.7)
+        main_pulse = self.sinus_raw(a=0.3, p=1, v=0.7)
+        breathe_pulse = self.trunc_sinus_raw(a=0.3, p=0.5, v=0.7)
 
         crest_idx = floor(len(main_pulse.factors) / 4)
 
