@@ -1,6 +1,7 @@
 """
 Classes for interacting with Spotify API
 """
+import asyncio
 import inspect
 import pprint
 import time
@@ -82,7 +83,7 @@ class SpotifyAPIHandler:
         self.audio_features: AudioFeatures = AudioFeatures.empty()
         self.last_api_call_time = time.time()
 
-    def __handle_api_interval(self):
+    async def __handle_api_interval(self):
         current_time = time.time()
         diff = current_time - self.last_api_call_time
         self.last_api_call_time = current_time
@@ -92,7 +93,8 @@ class SpotifyAPIHandler:
             print(f"API call interval: {diff:.2f}")
 
     def update_current_track(self):
-        self.__handle_api_interval()
+        # Log API call interval in background
+        asyncio.create_task(self.__handle_api_interval())
         self.current_track = TrackObject(self.spotify.currently_playing())
         return self.current_track
 
