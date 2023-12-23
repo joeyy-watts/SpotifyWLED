@@ -14,7 +14,7 @@ class ManagedCoroutineFunction:
         - _stop_function: the function that determines when the coroutine should stop
 
     The coroutine will stop in the following cases:
-        - _stop_function returns True
+        - _stop_function calls stop_event.is_set()
         - stop() is called
     """
     def __init__(self):
@@ -30,8 +30,6 @@ class ManagedCoroutineFunction:
     async def run(self, *args, **kwargs):
         """
         Runs the coroutine function.
-
-        This should be a blocking function.
         """
         self.loop.create_task(self.__stop_loop(self.stop_event))
 
@@ -54,6 +52,8 @@ class ManagedCoroutineFunction:
     async def _stop_function(self, stop_event: Event):
         """
         Function to determine whether the coroutine should stop.
+
+        This function should call stop_event.set() when the coroutine should stop.
         """
         raise NotImplementedError
 
