@@ -77,8 +77,7 @@ class AioMainHTTPHandler():
 
         for ArtNet, polling is handled by the internal WLEDArtNet async stop loops.
         """
-        while(True):
-            await handler.animate()
+        await handler.animate()
 
     async def __json_loop(self, wled_handler: WLEDJson):
         """
