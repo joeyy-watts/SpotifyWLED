@@ -1,5 +1,6 @@
 import asyncio
 import time
+from asyncio import Event
 from typing import final
 
 from confs.global_confs import TARGET_FPS, IDLE_TIMEOUT
@@ -41,21 +42,20 @@ class AnimateCover(ManagedCoroutineFunction):
         """
         Main function that plays animation
         """
-        while not self.stop_event.is_set():
-            for i in self.effect_data.factors:
-                # TODO: for brighter pixels, apply factor at 1.0 multiplier
-                # for darker pixels, apply factor scaled to absolute brightness
+        for i in self.effect_data.factors:
+            # TODO: for brighter pixels, apply factor at 1.0 multiplier
+            # for darker pixels, apply factor scaled to absolute brightness
 
-                # TODO: refactor into separate function
-                await self.handler.set_pixels([[int(r * i), int(g * i), int(b * i)]
-                                               if not is_black((r, g, b)) else
-                                               [int(r), int(g), int(b)]
-                                               for r, g, b in self.image])
+            # TODO: refactor into separate function
+            await self.handler.set_pixels([[int(r * i), int(g * i), int(b * i)]
+                                           if not is_black((r, g, b)) else
+                                           [int(r), int(g), int(b)]
+                                           for r, g, b in self.image])
 
-                # have to await according to target FPS
-                await asyncio.sleep(self.effect_data.period / TARGET_FPS)
+            # have to await according to target FPS
+            await asyncio.sleep(self.effect_data.period / TARGET_FPS)
 
-    async def _stop_function(self, stop_event):
+    async def _stop_function(self):
         raise NotImplementedError
 
     def _get_effect_data(self) -> EffectData:
@@ -79,12 +79,12 @@ class PlayCover(AnimateCover):
     def _get_effect_data(self) -> EffectData:
         return PlaybackEffects(self.width, self.height).bpm_play(self.api_handler.get_audio_features())
 
-    async def _stop_function(self, stop_event):
+    async def _stop_function(self):
         current_track = self.api_handler.update_current_track()
 
         if not current_track.is_playing \
                 or current_track.track_id != self.track.track_id:
-            stop_event.set()
+            self.stop_event.set()
 
 
 class PauseCover(AnimateCover):
@@ -104,12 +104,12 @@ class PauseCover(AnimateCover):
     def _get_effect_data(self) -> EffectData:
         return PlaybackEffects(self.width, self.height).pause()
 
-    async def _stop_function(self, stop_event):
+    async def _stop_function(self):
         current_track = self.api_handler.update_current_track()
 
         if current_track.is_playing \
                 or current_track.track_id != self.track.track_id:
-            stop_event.set()
+            self.stop_event.set()
 
 
 class IdleCover(AnimateCover):
@@ -130,10 +130,9 @@ class IdleCover(AnimateCover):
     def _get_effect_data(self) -> EffectData:
         return PlaybackEffects(self.width, self.height).pause()
 
-    async def _stop_function(self, stop_event):
+    async def _stop_function(self):
         current_track = self.api_handler.update_current_track()
 
         if time.time() - self.idle_start_time > IDLE_TIMEOUT \
                 or current_track.track_id is not None:
-            stop_event.set()
-
+            self.stop_event.set()
