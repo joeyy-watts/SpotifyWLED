@@ -6,6 +6,7 @@ from time import sleep
 
 from aiohttp import web
 
+from handlers.main_loops.ArtNetLoop import ArtNetLoop
 from handlers.spotify_api_handler import SpotifyAPIHandler
 from handlers.wled import WLEDArtNet, WLEDJson
 from utils.common import WLEDMode
@@ -19,7 +20,10 @@ from utils.spotify_utils import calculate_remaining_time
 #
 # https://developer.spotify.com/documentation/web-api/concepts/rate-limits
 
+# TODO: maybe add back JSON mode
+
 POLLING_SECONDS = 5  # period in seconds to poll Spotify API for changes
+
 
 class AioMainHTTPHandler():
     def __init__(self,
@@ -53,12 +57,19 @@ class AioMainHTTPHandler():
         """
         runs the correct loop functions according to given WLED handler
         """
-        task = asyncio.create_task(self.__get_wled_handler(self.address, self.wled_mode))
-        await task
+        # assign animation_loop
         if self.wled_mode is WLEDMode.ARTNET:
-            self.animation_loop = asyncio.create_task(self.__artnet_loop(task.result()))
-        elif self.wled_mode is WLEDMode.JSON:
-            self.animation_loop = asyncio.create_task(self.__json_loop(task.result()))
+            self.animation_loop = ArtNetLoop(
+                WLEDArtNet(
+                    self.address,
+                    self.width,
+                    self.height,
+                    self.api_handler
+                )
+            )
+
+        # run animation loop
+        self.animation_loop.run()
 
         return web.Response(text="Started loop")
 
@@ -66,21 +77,13 @@ class AioMainHTTPHandler():
         """
         stop running animation loop, if any
         """
-        # to be implemented
-        return web.Response(status=501, text="Not implemented yet")
+        self.animation_loop.stop()
 
-    async def __artnet_loop(self, handler: WLEDArtNet):
-        """
-        initiates listening loop to start updating WLED target with album cover
-
-        if nothing is playing, displays the Spotify logo
-
-        for ArtNet, polling is handled by the internal WLEDArtNet async stop loops.
-        """
-        await handler.animate()
+        return web.Response(text="Stopped loop")
 
     async def __json_loop(self, wled_handler: WLEDJson):
         """
+        TO BE REMOVED?
         initiates listening loop to start updating WLED target with album cover
 
         for JSON, polling is handled in this class
