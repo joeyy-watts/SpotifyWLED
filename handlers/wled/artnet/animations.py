@@ -19,7 +19,7 @@ AnimateCover is the base class that implements the logic for sending the cover t
 
 Each individual effect must implement the following:
      - _get_effect_data: to return the desired PlaybackEffect
-     - _stop_function: this is the function that contains the stop condition for that animation
+     - _stop_condition: should return True when the animation should stop
 """
 
 
@@ -65,10 +65,15 @@ class AnimateCover(ManagedCoroutineFunction):
             # have to await according to target FPS
             await asyncio.sleep(self.effect_data.period / TARGET_FPS)
 
+    @final
     async def _stop_function(self):
-        raise NotImplementedError
+        if self._stop_condition():
+            self.stop_event.set()
 
     def _get_effect_data(self) -> EffectData:
+        raise NotImplementedError
+
+    def _stop_condition(self):
         raise NotImplementedError
 
 
@@ -89,13 +94,11 @@ class PlayCover(AnimateCover):
     def _get_effect_data(self) -> EffectData:
         return PlaybackEffects(self.width, self.height).bpm_play(self.api_handler.get_audio_features())
 
-    async def _stop_function(self):
+    def _stop_condition(self):
         current_track = self.api_handler.update_current_track()
 
-        if not current_track.is_playing \
-                or current_track.track_id != self.track.track_id:
-            self.stop_event.set()
-
+        return not current_track.is_playing \
+                or current_track.track_id != self.track.track_id
 
 class PauseCover(AnimateCover):
     def __init__(self,
@@ -114,12 +117,11 @@ class PauseCover(AnimateCover):
     def _get_effect_data(self) -> EffectData:
         return PlaybackEffects(self.width, self.height).pause()
 
-    async def _stop_function(self):
+    def _stop_condition(self):
         current_track = self.api_handler.update_current_track()
 
-        if current_track.is_playing \
-                or current_track.track_id != self.track.track_id:
-            self.stop_event.set()
+        return current_track.is_playing \
+                or current_track.track_id != self.track.track_id
 
 
 class IdleCover(AnimateCover):
@@ -140,9 +142,8 @@ class IdleCover(AnimateCover):
     def _get_effect_data(self) -> EffectData:
         return PlaybackEffects(self.width, self.height).pause()
 
-    async def _stop_function(self):
+    def _stop_condition(self):
         current_track = self.api_handler.update_current_track()
 
-        if time.time() - self.idle_start_time > IDLE_TIMEOUT \
-                or current_track.track_id is not None:
-            self.stop_event.set()
+        return time.time() - self.idle_start_time > IDLE_TIMEOUT \
+                or current_track.track_id is not None
