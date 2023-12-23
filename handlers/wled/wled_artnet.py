@@ -13,34 +13,33 @@ class WLEDArtNet(BaseWLEDHandler):
         self.animating_track = None
 
     async def animate(self):
-        while(True):
-            # update current track
-            current_track = self.api_handler.update_current_track()
+        # update current track
+        current_track = self.api_handler.update_current_track()
 
-            # idle animation, if no track is playing
-            if current_track.track_id is None:
-                await IdleCover(
-                    self.size[0],
-                    self.size[1],
-                    self.handler,
-                    self.api_handler,
-                    current_track
-                ).run()
+        # idle animation, if no track is playing
+        if current_track.track_id is None:
+            await IdleCover(
+                self.size[0],
+                self.size[1],
+                self.handler,
+                self.api_handler,
+                current_track
+            ).run()
 
-            # run appropriate animation (play/pause)
-            if current_track.is_playing:
-                await PlayCover(
-                    self.size[0],
-                    self.size[1],
-                    self.handler,
-                    self.api_handler,
-                    current_track
-                ).run()
-            else:
-                await PauseCover(
-                    self.size[0],
-                    self.size[1],
-                    self.handler,
-                    self.api_handler,
-                    current_track
-                ).run()
+        # run appropriate animation (play/pause)
+        if current_track.is_playing:
+            await PlayCover(
+                self.size[0],
+                self.size[1],
+                self.handler,
+                self.api_handler,
+                current_track
+            ).run()
+        else:
+            await PauseCover(
+                self.size[0],
+                self.size[1],
+                self.handler,
+                self.api_handler,
+                current_track
+            ).run()
