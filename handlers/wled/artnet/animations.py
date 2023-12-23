@@ -12,6 +12,16 @@ from utils.effects.effects import PlaybackEffects
 from utils.effects.effects_utils import is_black
 from utils.image_utils import get_cover
 
+"""
+Animations for cover art.
+
+AnimateCover is the base class that implements the logic for sending the cover to WLED.
+
+Each individual effect must implement the following:
+     - _get_effect_data: to return the desired PlaybackEffect
+     - _stop_function: this is the function that contains the stop condition for that animation
+"""
+
 
 class AnimateCover(ManagedCoroutineFunction):
     def __init__(self,
