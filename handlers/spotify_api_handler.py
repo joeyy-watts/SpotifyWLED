@@ -9,6 +9,8 @@ import time
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
+from confs.global_confs import IDLE_IMAGE_URL
+
 
 class TrackObject:
     def __init__(self, track_dict):
@@ -112,4 +114,7 @@ class SpotifyAPIHandler:
         return self.audio_features
 
     def get_current_track_cover(self):
-        return self.current_track.cover_url
+        if self.current_track.track_id is None:
+            return IDLE_IMAGE_URL
+        else:
+            return self.current_track.cover_url

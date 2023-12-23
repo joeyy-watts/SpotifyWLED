@@ -9,6 +9,8 @@ TARGET_FPS = 24
 
 POLLING_SECONDS = 3
 
+IDLE_IMAGE_URL = 'https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs'
+
 # Idle timeout (in seconds).
 # If nothing is playing for this amount of time, the Spotify loop will stop.
 IDLE_TIMEOUT = 5 * 60
