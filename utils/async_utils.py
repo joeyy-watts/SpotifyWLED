@@ -1,5 +1,4 @@
 import asyncio
-from asyncio import Event
 from typing import final
 
 from confs.global_confs import POLLING_SECONDS
@@ -27,38 +26,45 @@ class ManagedCoroutineFunction:
         self.loop = asyncio.get_event_loop()
 
     @final
-    async def run(self, *args, **kwargs):
+    def run(self):
         """
         Runs the coroutine function.
-        """
-        self.loop.create_task(self.__stop_loop(self.stop_event))
 
-        while not self.stop_event.is_set():
-            await self._main_function(*args, **kwargs)
+        This is a blocking function that will spawn tasks to run the required loops
+
+        :return: the asyncio.Task that is running the coroutine function
+        """
+        self.loop.create_task(self.__stop_loop())
+        return self.loop.create_task(self.__main_loop())
 
     @final
-    async def stop(self):
+    def stop(self):
         """
         Stops the coroutine function manually.
         """
         self.stop_event.set()
 
-    async def _main_function(self, *args, **kwargs):
+    async def _main_function(self):
         """
         Main logic of the coroutine function should be implemented here.
         """
         raise NotImplementedError
 
-    async def _stop_function(self, stop_event: Event):
+    async def _stop_function(self):
         """
         Function to determine whether the coroutine should stop.
 
-        This function should call stop_event.set() when the coroutine should stop.
+        This function should call self.stop_event.set() when the coroutine should stop.
         """
         raise NotImplementedError
 
     @final
-    async def __stop_loop(self, stop_event: Event):
-        while not stop_event.is_set():
+    async def __stop_loop(self):
+        while not self.stop_event.is_set():
             await asyncio.sleep(POLLING_SECONDS)
-            await self._stop_function(stop_event)
+            await self._stop_function()
+
+    @final
+    async def __main_loop(self):
+        while not self.stop_event.is_set():
+            await self._main_function()
