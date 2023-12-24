@@ -1,5 +1,6 @@
 import asyncio
 import time
+from threading import Thread
 from typing import final
 
 from confs.global_confs import TARGET_FPS, IDLE_TIMEOUT
@@ -71,9 +72,13 @@ class AnimateCover(ManagedCoroutineFunction):
 
     @final
     async def _stop_function(self):
-        self.current_track = self.api_handler.update_current_track()
+        Thread(target=self.__update_track).start()
         if self._stop_condition():
             self.stop_event.set()
+
+    @final
+    def __update_track(self):
+        self.current_track = self.api_handler.update_current_track()
 
     def _get_effect_data(self) -> EffectData:
         raise NotImplementedError
