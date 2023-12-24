@@ -1,6 +1,5 @@
 import asyncio
 import time
-from asyncio import Event
 from typing import final
 
 from confs.global_confs import TARGET_FPS, IDLE_TIMEOUT
@@ -63,7 +62,7 @@ class AnimateCover(ManagedCoroutineFunction):
                                            for r, g, b in self.image])
 
             # have to await according to target FPS
-            await asyncio.sleep(self.effect_data.period / TARGET_FPS)
+            await asyncio.sleep(1 / TARGET_FPS)
 
     @final
     async def _stop_function(self):

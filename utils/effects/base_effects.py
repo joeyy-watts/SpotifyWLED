@@ -58,12 +58,11 @@ class Effect:
         :param period: the period of the effect's waveform
         :return: EffectData object with brightness factors and period
         """
-        # TODO: actual calculation for target FPS, right now longer periods will just have lower FPS
-        num_factors = self.target_fps
+        num_factors = int(self.target_fps * period)
 
         factors = []
         for i in range(0, num_factors):
-            factors.append(function(period * (i / self.target_fps)))
+            factors.append(function(period * (i / num_factors)))
         return EffectData(factors, period)
 
 
