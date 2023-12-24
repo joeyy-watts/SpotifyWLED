@@ -1,10 +1,11 @@
 import io
-from enum import Enum
+from functools import lru_cache
 
 import requests
 from PIL import Image
 
 
+@lru_cache(maxsize=32)
 def get_cover(url: str, size: (int, int)):
     """
     Downloads and processes image from given URL to be displayed on matrix.
