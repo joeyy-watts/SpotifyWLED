@@ -5,6 +5,7 @@ import asyncio
 import inspect
 import pprint
 import time
+from functools import lru_cache
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -107,10 +108,12 @@ class SpotifyAPIHandler:
         if self.current_track is None:
             self.update_current_track()
 
-        # TODO: implement caching to avoid unnecessary API calls
-        json = self.spotify.audio_features(self.current_track.track_id)
-        self.audio_features = AudioFeatures.from_dict(json[0])
+        return self._get_audio_features_cached(self.current_track.track_id)
 
+    @lru_cache(maxsize=32)
+    def _get_audio_features_cached(self, track_id):
+        json = self.spotify.audio_features(track_id)
+        self.audio_features = AudioFeatures.from_dict(json[0])
         return self.audio_features
 
     def get_current_track_cover(self):
