@@ -7,7 +7,7 @@ Various global configurations.
 # It is suggested to keep it reasonably low
 TARGET_FPS = 24
 
-POLLING_SECONDS = 3
+POLLING_SECONDS = 2
 
 IDLE_IMAGE_URL = 'https://play-lh.googleusercontent.com/cShys-AmJ93dB0SV8kE6Fl5eSaf4-qMMZdwEDKI5VEmKAXfzOqbiaeAsqqrEBCTdIEs'
 
