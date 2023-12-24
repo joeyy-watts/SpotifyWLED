@@ -62,6 +62,7 @@ class AnimateCover(ManagedCoroutineFunction):
             # for darker pixels, apply factor scaled to absolute brightness
 
             # TODO: refactor into separate function
+            # TODO: WaveformEffects uses multiply every pixel, OverlayEffect should replace pixels
             await self.handler.set_pixels([[int(r * i), int(g * i), int(b * i)]
                                            if not is_black((r, g, b)) else
                                            [int(r), int(g), int(b)]
