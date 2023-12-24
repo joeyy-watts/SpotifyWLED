@@ -86,7 +86,7 @@ class SpotifyAPIHandler:
         self.audio_features: AudioFeatures = AudioFeatures.empty()
         self.last_api_call_time = time.time()
 
-    async def __handle_api_interval(self):
+    def __handle_api_interval(self):
         current_time = time.time()
         diff = current_time - self.last_api_call_time
         self.last_api_call_time = current_time
@@ -97,7 +97,7 @@ class SpotifyAPIHandler:
 
     def update_current_track(self):
         # Log API call interval in background
-        asyncio.create_task(self.__handle_api_interval())
+        self.__handle_api_interval()
         self.current_track = TrackObject(self.spotify.currently_playing())
         return self.current_track
 
