@@ -68,7 +68,7 @@ class ArtNetHandler:
                 channel_start += CHANNEL_WIDTH_MAPPING[self.mode]
 
     def __get_num_universe(self, leds: int, mode: WLEDArtNetMode):
-        leds_per_universe = CHANNELS_PER_UNIVERSE / CHANNEL_WIDTH_MAPPING[mode]
+        leds_per_universe = floor(CHANNELS_PER_UNIVERSE / CHANNEL_WIDTH_MAPPING[mode])
         total_universes = ceil(leds / leds_per_universe)
 
         return total_universes
