@@ -18,16 +18,22 @@ class PlaybackEffects(WaveformEffects):
         :param breathe_count: number of times to "breathe"
         :return: list of brightness factors
         """
-        # TODO: improve this a bit more
-        main_pulse = self.sinus_raw(a=0.3, p=1, v=0.7)
-        breathe_pulse = self.trunc_sinus_raw(a=0.3, p=0.5, v=0.7)
+        # TODO: refactor this lmao
+        main_pulse = self.sinus_raw(a=0.3, p=2, v=0.7)
+        breathe_pulse_raw = self.trunc_sinus_raw(a=0.3, p=1, v=0.7)
 
-        crest_idx = floor(len(main_pulse.factors) / 4)
+        # splice breathe_pulse to get crest-to-crest
+        breathe_pulse_idx = floor(len(breathe_pulse_raw.factors) / 4)
+        breathe_pulse = breathe_pulse_raw.factors[breathe_pulse_idx:-breathe_pulse_idx] * breathe_count
 
-        spliced_wave = main_pulse.factors[:crest_idx] + (breathe_pulse.factors) + main_pulse.factors[crest_idx:]
+        main_crest_idx = floor(len(main_pulse.factors) / 4)
+
+        spliced_wave = main_pulse.factors[:main_crest_idx] + \
+                       breathe_pulse + \
+                       main_pulse.factors[main_crest_idx:]
 
         # splice the main pulse with breathing at the crest
-        return EffectData(spliced_wave, main_pulse.period + breathe_pulse.period)
+        return EffectData(spliced_wave, main_pulse.period + ((breathe_pulse_raw.period / 4) * breathe_count))
 
     def generic_play(self, period: float = 0.5):
         """
