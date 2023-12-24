@@ -1,18 +1,49 @@
-from functools import partial
-from http.server import HTTPServer
-
-from utils.common import get_client_secret, get_client_id, get_target_address
-from handlers.server import SpotifyWLEDHTTPHandler
-from handlers.wled_handler import WLEDHandler
+from handlers.main_http_handler import AioMainHTTPHandler
+from utils.common import get_client_id, get_client_secret, WLEDMode
+import socket
 
 """
-Main entry point for the application
-"""
+USER SETTINGS
 
+Adjust these settings according to your WLED setup.
+"""
+# mDNS or IP address of target WLED device
+TARGET = 'wled-frame.local'
+
+# Dimensions of target WLED device
+TARGET_WIDTH = 32
+TARGET_HEIGHT = 32
+
+"""
+There are two modes of operation for WLED:
+    - ARTNET: WLED is controlled via ArtNet, supports animations.
+    - JSON: WLED is controlled via JSON API, only static images supported.
+        This is pretty much deprecated as there is not much potential in it.
+"""
+WLED_MODE = WLEDMode.ARTNET
+
+"""
+Main entrypoint
+"""
 if __name__ == '__main__':
-    wled_handler = WLEDHandler(get_target_address(), 32, 32)
+    try:
+        target_ip = socket.gethostbyname(TARGET)
+    except socket.gaierror:
+        print(f'Could not resolve IP address for {TARGET}.')
+        exit(1)
+    except Exception as e:
+        print(f'Unknown error occurred while resolving IP address for {TARGET}.\nCaught exception: {e}')
+        exit(1)
 
-    handler = partial(SpotifyWLEDHTTPHandler, get_client_id(), get_client_secret(), wled_handler)
+    handler = AioMainHTTPHandler(
+        get_client_id(),
+        get_client_secret(),
+        target_ip,
+        WLED_MODE,
+        TARGET_WIDTH,
+        TARGET_HEIGHT
+    )
 
-    server = HTTPServer(('', 8081), handler)
-    server.serve_forever()
+    print(f"Starting SpotifyWLED for device: {TARGET} ({target_ip})")
+
+    handler.run()

@@ -3,7 +3,18 @@ General utility functions
 """
 import os
 import platform
+from enum import Enum
 
+
+class WLEDMode(Enum):
+    """
+    Protocols to use to update WLED.
+
+    ArtNet is preferred, as it offers a lot more flexibility.
+    JSON will likely be deprecated.
+    """
+    JSON = 1
+    ARTNET = 2
 
 def format_path(path: str) -> str:
     if path.startswith('..'):

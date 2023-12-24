@@ -1,3 +1,5 @@
 requests
 spotipy
 pillow
+pyartnet
+aiohttp
