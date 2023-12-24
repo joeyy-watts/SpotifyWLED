@@ -178,6 +178,7 @@ class OverlayEffects(Effect):
         - Bar (solid colored bar that wipes across image)
         - Noise (solid noise overlay)
         - Twinkle
+        - Fireworks; random fireworks according to beat
 
     refer to Jinx for additional ideas
     """
