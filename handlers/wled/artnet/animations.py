@@ -42,7 +42,12 @@ class AnimateCover(ManagedCoroutineFunction):
         self.api_handler: SpotifyAPIHandler = api_handler
         self.image = get_cover(self.api_handler.get_current_track_cover(), (width, height))
         self.effect_data = self._get_effect_data()
+
+        # track ID of cover art that is being played by current animation
         self.displaying_tid = track.track_id
+
+        # currently active track on Spotify
+        self.current_track = track
 
         super().__init__()
 
@@ -66,6 +71,7 @@ class AnimateCover(ManagedCoroutineFunction):
 
     @final
     async def _stop_function(self):
+        self.current_track = self.api_handler.update_current_track()
         if self._stop_condition():
             self.stop_event.set()
 
@@ -94,10 +100,8 @@ class PlayCover(AnimateCover):
         return PlaybackEffects(self.width, self.height).bpm_play(self.api_handler.get_audio_features())
 
     def _stop_condition(self):
-        current_track = self.api_handler.update_current_track()
-
-        return not current_track.is_playing \
-                or current_track.track_id != self.track.track_id
+        return not self.current_track.is_playing \
+                or self.current_track.track_id != self.displaying_tid
 
 class PauseCover(AnimateCover):
     def __init__(self,
@@ -117,10 +121,8 @@ class PauseCover(AnimateCover):
         return PlaybackEffects(self.width, self.height).pause()
 
     def _stop_condition(self):
-        current_track = self.api_handler.update_current_track()
-
-        return current_track.is_playing \
-                or current_track.track_id != self.track.track_id
+        return self.current_track.is_playing \
+                or self.current_track.track_id != self.displaying_tid
 
 
 class IdleCover(AnimateCover):
@@ -142,7 +144,5 @@ class IdleCover(AnimateCover):
         return PlaybackEffects(self.width, self.height).pause()
 
     def _stop_condition(self):
-        current_track = self.api_handler.update_current_track()
-
         return time.time() - self.idle_start_time > IDLE_TIMEOUT \
-                or current_track.track_id is not None
+                or self.current_track.track_id is not None
