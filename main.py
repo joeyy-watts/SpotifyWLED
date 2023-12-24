@@ -22,18 +22,28 @@ There are two modes of operation for WLED:
 """
 WLED_MODE = WLEDMode.ARTNET
 
-
 """
 Main entrypoint
 """
 if __name__ == '__main__':
+    try:
+        target_ip = socket.gethostbyname(TARGET)
+    except socket.gaierror:
+        print(f'Could not resolve IP address for {TARGET}.')
+        exit(1)
+    except Exception as e:
+        print(f'Unknown error occurred while resolving IP address for {TARGET}.\nCaught exception: {e}')
+        exit(1)
+
     handler = AioMainHTTPHandler(
         get_client_id(),
         get_client_secret(),
-        socket.gethostbyname(TARGET),
+        target_ip,
         WLED_MODE,
         TARGET_WIDTH,
         TARGET_HEIGHT
     )
+
+    print(f"Starting SpotifyWLED for device: {TARGET} ({target_ip})")
 
     handler.run()
