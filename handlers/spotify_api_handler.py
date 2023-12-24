@@ -10,7 +10,7 @@ from functools import lru_cache
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-from confs.global_confs import IDLE_IMAGE_URL
+from confs.global_confs import IDLE_IMAGE_URL, POLLING_SECONDS
 
 
 class TrackObject:
@@ -90,8 +90,8 @@ class SpotifyAPIHandler:
         current_time = time.time()
         diff = current_time - self.last_api_call_time
         self.last_api_call_time = current_time
-        if diff < 5:
-            print(f"WARN - API call interval < 5s: {diff:.2f}; caller: {inspect.stack()[1].function}")
+        if diff < POLLING_SECONDS:
+            print(f"WARN - API call interval < {POLLING_SECONDS}s: {diff:.2f}; caller: {inspect.stack()[1].function}")
         else:
             print(f"API call interval: {diff:.2f}")
 
