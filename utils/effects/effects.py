@@ -74,4 +74,4 @@ class PlaybackEffects(WaveformEffects):
         but that's some time off..
         """
 
-        return self.trunc_sinuc_bpm(bpm=t_audio_features.tempo, a=0.3, v=0.6, invert=invert)
+        return self.trunc_sinus_features(t_audio_features, invert=invert)
