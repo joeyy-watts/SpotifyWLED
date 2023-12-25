@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Currently Playing Track</title>
+    <style>
+        /* CSS styles for better formatting */
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .track-info,
+        .audio-features {
+            flex: 0 0 48%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .track-info img,
+        .audio-features img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 2px solid #ccc; /* Adding border around the image */
+        }
+        .section-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<title>SpotifyWLED</title>
+<body>
+<iframe name="dummy" id="dummy" style="display: none;"></iframe>
+
+<h1>SpotifyWLED Console</h1>
+
+<form action="/start" method="POST" target="dummy">
+    <button>Start Loop</button>
+</form>
+
+
+<h1>Currently Playing Track:</h1>
+    <div class="container">
+        <div id="trackInfo" class="track-info">
+            <div class="section-title">Currently Playing Track</div>
+        </div>
+        <div id="audioFeatures" class="audio-features">
+            <div class="section-title">Audio Features</div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchParameters() {
+            try {
+                const responseCurrentlyPlaying = await fetch('/currently-playing');
+                const dataCurrentlyPlaying = await responseCurrentlyPlaying.json();
+
+                const responseAudioFeatures = await fetch('/current-audio-features');
+                const dataAudioFeatures = await responseAudioFeatures.json();
+
+                // Construct HTML content with fetched parameters (Currently Playing)
+                let htmlContentCurrentlyPlaying = '<div>';
+                htmlContentCurrentlyPlaying += `<p><strong>Track ID:</strong> ${dataCurrentlyPlaying.track_id}</p>`;
+                htmlContentCurrentlyPlaying += `<p><strong>Track Name:</strong> ${dataCurrentlyPlaying.track_name}</p>`;
+                htmlContentCurrentlyPlaying += `<p><strong>Progress:</strong> ${dataCurrentlyPlaying.progress} ms</p>`;
+                htmlContentCurrentlyPlaying += `<p><strong>Track Length:</strong> ${dataCurrentlyPlaying.track_length} ms</p>`;
+                htmlContentCurrentlyPlaying += `<p><strong>Is Playing:</strong> ${dataCurrentlyPlaying.is_playing ? 'Yes' : 'No'}</p>`;
+                htmlContentCurrentlyPlaying += `<img src="${dataCurrentlyPlaying.cover_url}" alt="Album Cover">`;
+                htmlContentCurrentlyPlaying += '</div>';
+
+                // Construct HTML content with fetched parameters (Audio Features)
+                let htmlContentAudioFeatures = '<div>';
+                htmlContentAudioFeatures += `<p><strong>Danceability:</strong> ${dataAudioFeatures.danceability}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Energy:</strong> ${dataAudioFeatures.energy}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Key:</strong> ${dataAudioFeatures.key}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Loudness:</strong> ${dataAudioFeatures.loudness}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Mode:</strong> ${dataAudioFeatures.mode}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Speechiness:</strong> ${dataAudioFeatures.speechiness}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Acousticness:</strong> ${dataAudioFeatures.acousticness}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Instrumentalness:</strong> ${dataAudioFeatures.instrumentalness}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Liveness:</strong> ${dataAudioFeatures.liveness}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Valence:</strong> ${dataAudioFeatures.valence}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Tempo:</strong> ${dataAudioFeatures.tempo}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Duration (ms):</strong> ${dataAudioFeatures.duration_ms}</p>`;
+                htmlContentAudioFeatures += `<p><strong>Time Signature:</strong> ${dataAudioFeatures.time_signature}</p>`;
+                htmlContentAudioFeatures += '</div>';
+
+                // Replace the HTML content inside the respective divs
+                const trackInfoDiv = document.getElementById('trackInfo');
+                const audioFeaturesDiv = document.getElementById('audioFeatures');
+
+                trackInfoDiv.innerHTML = `<div class="section-title">Currently Playing Track</div>${htmlContentCurrentlyPlaying}`;
+                audioFeaturesDiv.innerHTML = `<div class="section-title">Audio Features</div>${htmlContentAudioFeatures}`;
+            } catch (error) {
+                console.error('Error fetching parameters:', error);
+            }
+        }
+
+        // Function to fetch data initially and start fetching periodically
+        async function fetchDataPeriodically() {
+            // Fetch data immediately when the page loads
+            await fetchParameters();
+
+            // Set interval to fetch data every 5 seconds (5000 milliseconds)
+            setInterval(fetchParameters, 5000); // Adjust the interval as needed
+        }
+
+        // Call the function to start fetching data periodically
+        fetchDataPeriodically();
+    </script>
+</body>
+</html>

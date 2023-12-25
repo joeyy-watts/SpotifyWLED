@@ -9,7 +9,7 @@ from aiohttp import web
 from handlers.main_loops.ArtNetLoop import ArtNetLoop
 from handlers.spotify_api_handler import SpotifyAPIHandler
 from handlers.wled import WLEDArtNet, WLEDJson
-from utils.common import WLEDMode
+from utils.common import WLEDMode, format_path
 from utils.spotify_utils import calculate_remaining_time
 
 
@@ -40,7 +40,7 @@ class AioMainHTTPHandler():
         self.height = height
         self.wled_mode = wled_mode
 
-        self.animation_loop = None
+        self.animation_loop: ArtNetLoop = None
 
     async def __get_wled_handler(self, address: str, mode: WLEDMode):
         task = asyncio.create_task(self.__actual_get(address, mode))
@@ -52,6 +52,15 @@ class AioMainHTTPHandler():
             return WLEDArtNet(address, self.width, self.height, self.api_handler)
         elif mode == WLEDMode.JSON:
             return WLEDJson(address, self.width, self.height)
+
+    async def __index(self, request):
+        """
+        index page
+        :param request:
+        :return:
+        """
+        with open(format_path("static/index.html"), "r") as f:
+            return web.Response(text=f.read(), content_type="text/html")
 
     async def __run_loop(self, request):
         """
@@ -71,7 +80,21 @@ class AioMainHTTPHandler():
         # run animation loop
         self.animation_loop.run()
 
-        return web.Response(text="Started loop")
+        return web.HTTPOk()
+
+    async def __get_current_track(self, request):
+        """
+        returns current track info as JSON
+        """
+        track = await self.animation_loop.handler.get_current_track()
+        return web.json_response(track.to_dict())
+
+    async def __get_audio_features(self, request):
+        """
+        returns current track info as JSON
+        """
+        queue = await self.animation_loop.handler.get_audio_features()
+        return web.json_response(queue.to_dict())
 
     async def __stop_loop(self, request):
         """
@@ -79,7 +102,7 @@ class AioMainHTTPHandler():
         """
         self.animation_loop.stop()
 
-        return web.Response(text="Stopped loop")
+        return web.HTTPOk()
 
     async def __json_loop(self, wled_handler: WLEDJson):
         """
@@ -113,7 +136,10 @@ class AioMainHTTPHandler():
 
     def run(self, host='0.0.0.0', port=8080):
         self.app.add_routes([
-            web.get('/start', self.__run_loop),
-            web.get('/stop', self.__stop_loop)
+            web.get('/', self.__index),
+            web.post('/start', self.__run_loop),
+            web.post('/stop', self.__stop_loop),
+            web.get('/currently-playing', self.__get_current_track),
+            web.get('/current-audio-features', self.__get_audio_features),
         ])
         web.run_app(self.app, host=host, port=port)
