@@ -1,6 +1,6 @@
 from handlers.artnet.artnet_handler import ArtNetHandler, WLEDArtNetMode
 from handlers.spotify_api_handler import SpotifyAPIHandler
-from handlers.wled.artnet.animations import PlayCover, PauseCover, IdleCover
+from handlers.wled.artnet.animations import PlayCover, PauseCover, IdleCover, AnimateCover
 from handlers.wled.wled_handler import BaseWLEDHandler
 
 
@@ -12,7 +12,9 @@ class WLEDArtNet(BaseWLEDHandler):
         super().__init__(address, width, height)
         self.api_handler = spotify_handler
         self.current_track = self.api_handler.update_current_track()
-        self.handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
+        self.artnet_handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
+
+        self.animation: AnimateCover = None
 
     """
     Get functions for frontend
@@ -33,16 +35,12 @@ class WLEDArtNet(BaseWLEDHandler):
     async def animate(self):
         # idle animation, if no track is playing
         if self.current_track.track_id is None:
-            await IdleCover(
-                self
-            ).run()
+            self.animation = IdleCover(self)
 
         # run appropriate animation (play/pause)
         if self.current_track.is_playing:
-            await PlayCover(
-                self
-            ).run()
+            self.animation = PlayCover(self)
         else:
-            await PauseCover(
-                self
-            ).run()
+            self.animation = PauseCover(self)
+
+        await self.animation.run()
