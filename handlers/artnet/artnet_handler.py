@@ -29,9 +29,6 @@ class ArtNetHandler:
         """
         Initializes a handler for an ArtNet node.
 
-        # TODO: if mDNS is given, resolve to IP address first
-        # as otherwise it introduces significant lag to resolve the address first
-
         :param target_address: address of the ArtNet node
         :param port: port of the ArtNet node (standard port is 6454; not recommended to change)
         :param leds: number of leds in the ArtNet node
