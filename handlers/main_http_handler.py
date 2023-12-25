@@ -86,14 +86,14 @@ class AioMainHTTPHandler():
         """
         returns current track info as JSON
         """
-        track = await self.animation_loop.handler.get_current_track()
+        track = await self.animation_loop.wled_handler.get_current_track()
         return web.json_response(track.to_dict())
 
     async def __get_audio_features(self, request):
         """
         returns current track info as JSON
         """
-        queue = await self.animation_loop.handler.get_audio_features()
+        queue = await self.animation_loop.wled_handler.get_audio_features()
         return web.json_response(queue.to_dict())
 
     async def __stop_loop(self, request):
