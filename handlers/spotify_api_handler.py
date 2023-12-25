@@ -14,6 +14,7 @@ from confs.global_confs import IDLE_IMAGE_URL, POLLING_SECONDS
 class TrackObject:
     def __init__(self, track_dict):
         if track_dict is not None:
+            self.json = track_dict
             self.track_id = track_dict["item"]["id"]
             self.track_name = track_dict["item"]["name"]
             self.progress = track_dict["progress_ms"]
@@ -21,6 +22,7 @@ class TrackObject:
             self.cover_url = track_dict["item"]["album"]["images"][0]["url"]
             self.is_playing = track_dict["is_playing"]
         else:
+            self.json = {}
             self.track_id = None
             self.track_name = "Not Playing"
             self.progress = None
@@ -39,24 +41,23 @@ class TrackObject:
         }
 
 class AudioFeatures:
-    def __init__(self, danceability: float, energy: float, key: int, loudness: float, mode: int,
-                 speechiness: float, acousticness: float, instrumentalness: float,
-                 liveness: float, valence: float, tempo: float):
-        self.danceability = danceability
-        self.energy = energy
-        self.key = key
-        self.loudness = loudness
-        self.mode = mode
-        self.speechiness = speechiness
-        self.acousticness = acousticness
-        self.instrumentalness = instrumentalness
-        self.liveness = liveness
-        self.valence = valence
-        self.tempo = tempo
+    def __init__(self, dict):
+        self.json = dict
+        self.danceability = dict.get('danceability', 0.0)
+        self.energy = dict.get('energy', 0.0)
+        self.key = dict.get('key', 0)
+        self.loudness = dict.get('loudness', 0.0)
+        self.mode = dict.get('mode', 0)
+        self.speechiness = dict.get('speechiness', 0.0)
+        self.acousticness = dict.get('acousticness', 0.0)
+        self.instrumentalness = dict.get('instrumentalness', 0.0)
+        self.liveness = dict.get('liveness', 0.0)
+        self.valence = dict.get('valence', 0.0)
+        self.tempo = dict.get('tempo', 0.0)
 
     @classmethod
     def empty(cls):
-        return AudioFeatures(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        return AudioFeatures({})
 
     def is_none(self):
         attributes = [
@@ -67,20 +68,8 @@ class AudioFeatures:
 
         return all(value == 0.0 if isinstance(value, float) else value == 0 for value in attributes)
 
-    @classmethod
-    def from_dict(cls, audio_features_dict: dict):
-        return cls(
-            audio_features_dict.get('danceability', 0.0),
-            audio_features_dict.get('energy', 0.0),
-            audio_features_dict.get('key', 0),
-            audio_features_dict.get('loudness', 0.0),
-            audio_features_dict.get('mode', 0),
-            audio_features_dict.get('speechiness', 0.0),
-            audio_features_dict.get('acousticness', 0.0),
-            audio_features_dict.get('instrumentalness', 0.0),
-            audio_features_dict.get('liveness', 0.0),
-            audio_features_dict.get('valence', 0.0),
-            audio_features_dict.get('tempo', 0.0))
+    def to_dict(self):
+        return self.json
 
 class SpotifyAPIHandler:
     def __init__(self, client_id: str, client_secret: str):
@@ -121,7 +110,7 @@ class SpotifyAPIHandler:
     def _get_audio_features_cached(self, track_id):
         self.__handle_api_interval()
         json = self.spotify.audio_features(track_id)
-        self.audio_features = AudioFeatures.from_dict(json[0])
+        self.audio_features = AudioFeatures(json[0])
         return self.audio_features
 
     def get_current_track_cover(self):
