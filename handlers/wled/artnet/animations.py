@@ -5,7 +5,7 @@ from typing import final
 
 from confs.global_confs import TARGET_FPS, IDLE_TIMEOUT
 from handlers.artnet.artnet_handler import ArtNetHandler
-from handlers.spotify_api_handler import SpotifyAPIHandler, TrackObject
+from handlers.spotify_api_handler import SpotifyAPIHandler
 from utils.async_utils import ManagedCoroutineFunction
 from utils.effects.base_effects import EffectData
 from utils.effects.effects import PlaybackEffects
@@ -25,11 +25,7 @@ Each individual effect must implement the following:
 
 class AnimateCover(ManagedCoroutineFunction):
     def __init__(self,
-                 width: int,
-                 height: int,
-                 handler: ArtNetHandler,
-                 api_handler: SpotifyAPIHandler,
-                 track: TrackObject
+                 wled_artnet
                  ):
         """
         Base class for all animations
@@ -39,16 +35,15 @@ class AnimateCover(ManagedCoroutineFunction):
         :param effect_data: the EffectData object with calculated effects
         :param player_state: the player state associated with the animation
         """
-        self.handler: ArtNetHandler = handler
-        self.api_handler: SpotifyAPIHandler = api_handler
-        self.image = get_cover(self.api_handler.get_current_track_cover(), (width, height))
+        self.handler: ArtNetHandler = wled_artnet.handler
+        self.api_handler: SpotifyAPIHandler = wled_artnet.api_handler
+        self.image = get_cover(self.api_handler.get_current_track_cover(), wled_artnet.size)
         self.effect_data = self._get_effect_data()
 
         # track ID of cover art that is being played by current animation
-        self.displaying_tid = track.track_id
+        self.displaying_tid = wled_artnet.current_track.track_id
 
-        # currently active track on Spotify
-        self.current_track = track
+        self.wled_artnet = wled_artnet
 
         super().__init__()
 
@@ -79,7 +74,7 @@ class AnimateCover(ManagedCoroutineFunction):
 
     @final
     def __update_track(self):
-        self.current_track = self.api_handler.update_current_track()
+        self.wled_artnet.current_track = self.api_handler.update_current_track()
 
     def _get_effect_data(self) -> EffectData:
         raise NotImplementedError
@@ -90,65 +85,45 @@ class AnimateCover(ManagedCoroutineFunction):
 
 class PlayCover(AnimateCover):
     def __init__(self,
-                 width: int,
-                 height: int,
-                 handler: ArtNetHandler,
-                 api_handler: SpotifyAPIHandler,
-                 track: TrackObject
+                 wled_artnet
                  ):
-        self.width = width
-        self.height = height
-        self.track = track
-
-        super().__init__(width, height, handler, api_handler, track)
+        self.wled_artnet = wled_artnet
+        super().__init__(wled_artnet)
 
     def _get_effect_data(self) -> EffectData:
-        return PlaybackEffects(self.width, self.height).bpm_play(self.api_handler.get_audio_features())
+        return PlaybackEffects(self.wled_artnet.size[0],  self.wled_artnet.size[1]).bpm_play(self.api_handler.get_audio_features(), True)
 
     def _stop_condition(self):
-        return not self.current_track.is_playing \
-                or self.current_track.track_id != self.displaying_tid
+        return not self.wled_artnet.current_track.is_playing \
+                or self.wled_artnet.current_track.track_id != self.displaying_tid
 
 class PauseCover(AnimateCover):
     def __init__(self,
-                 width: int,
-                 height: int,
-                 handler: ArtNetHandler,
-                 api_handler: SpotifyAPIHandler,
-                 track: TrackObject
+                 wled_artnet
                  ):
-        self.width = width
-        self.height = height
-        self.track = track
-
-        super().__init__(width, height, handler, api_handler, track)
+        self.wled_artnet = wled_artnet
+        super().__init__(wled_artnet)
 
     def _get_effect_data(self) -> EffectData:
-        return PlaybackEffects(self.width, self.height).pause()
+        return PlaybackEffects(self.wled_artnet.size[0],  self.wled_artnet.size[1]).pause()
 
     def _stop_condition(self):
-        return self.current_track.is_playing \
-                or self.current_track.track_id != self.displaying_tid
+        return self.wled_artnet.current_track.is_playing \
+                or self.wled_artnet.current_track.track_id != self.displaying_tid
 
 
 class IdleCover(AnimateCover):
     def __init__(self,
-                 width: int,
-                 height: int,
-                 handler: ArtNetHandler,
-                 api_handler: SpotifyAPIHandler,
-                 track: TrackObject
+                 wled_artnet
                  ):
-        self.width = width
-        self.height = height
-        self.track = track
+        self.wled_artnet = wled_artnet
         self.idle_start_time = time.time()
 
-        super().__init__(width, height, handler, api_handler, track)
+        super().__init__(wled_artnet)
 
     def _get_effect_data(self) -> EffectData:
-        return PlaybackEffects(self.width, self.height).pause()
+        return PlaybackEffects(self.wled_artnet.size[0],  self.wled_artnet.size[1]).pause()
 
     def _stop_condition(self):
         return time.time() - self.idle_start_time > IDLE_TIMEOUT \
-                or self.current_track.track_id is not None
+                or self.wled_artnet.current_track.track_id is not None

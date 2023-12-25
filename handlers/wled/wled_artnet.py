@@ -5,41 +5,44 @@ from handlers.wled.wled_handler import BaseWLEDHandler
 
 
 class WLEDArtNet(BaseWLEDHandler):
+    """
+    ArtNet handler for WLED devices
+    """
     def __init__(self, address: str, width: int, height: int, spotify_handler: SpotifyAPIHandler):
         super().__init__(address, width, height)
         self.api_handler = spotify_handler
-        self.current_tid = self.api_handler.get_current_track().track_id
+        self.current_track = self.api_handler.update_current_track()
         self.handler = ArtNetHandler(address, 6454, width * height, WLEDArtNetMode.MULTI_RGB)
-        self.animating_track = None
 
+    """
+    Get functions for frontend
+    """
+    async def get_current_track(self):
+        return self.current_track
+
+    # can't really be cached, so not making this available for now
+    # async def get_queue(self):
+    #     return self.api_handler.spotify.queue()
+
+    async def get_audio_features(self):
+        return self.api_handler.get_audio_features()
+
+    """
+    Entrypoint for animations
+    """
     async def animate(self):
-        # update current track
-        current_track = self.api_handler.update_current_track()
-
         # idle animation, if no track is playing
-        if current_track.track_id is None:
+        if self.current_track.track_id is None:
             await IdleCover(
-                self.size[0],
-                self.size[1],
-                self.handler,
-                self.api_handler,
-                current_track
+                self
             ).run()
 
         # run appropriate animation (play/pause)
-        if current_track.is_playing:
+        if self.current_track.is_playing:
             await PlayCover(
-                self.size[0],
-                self.size[1],
-                self.handler,
-                self.api_handler,
-                current_track
+                self
             ).run()
         else:
             await PauseCover(
-                self.size[0],
-                self.size[1],
-                self.handler,
-                self.api_handler,
-                current_track
+                self
             ).run()
