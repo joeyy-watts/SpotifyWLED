@@ -100,7 +100,9 @@ class AioMainHTTPHandler():
         """
         stop running animation loop, if any
         """
-        self.animation_loop.stop()
+        # TODO: make these namings more consistent; or make .stop() in ManagedCoroutineFunction not final
+        self.animation_loop.wled_handler.animation.stop()
+        self.animation_loop.exit()
 
         return web.HTTPOk()
 
