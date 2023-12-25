@@ -1,3 +1,5 @@
+![SpotifyWLED](C:\Users\Joey\PycharmProjects\SpotifyWLED\spotifywled.png)
+
 # SpotifyWLED
 A not-so-simple script to listen to the currently playing track on your Spotify account and forward it to a WLED (https://github.com/Aircoookie/WLED) LED matrix.
 
@@ -23,3 +25,9 @@ _(maybe I'll get around to refactoring it one day..)_
 5. Start the script using `main.py`
    1. Upon first run, it will prompt you to log in to Spotify and authorize the app. Follow the instructions.
 6. Start playing music on the same Spotify account, and hit `localhost:8081/start` to start
+
+
+## Credits
+- [Pixelated Font](https://www.dafont.com/pixelated.font) used in the logo, by [Skylar Park](https://www.dafont.com/skylar-park.d2956)
+- [WLED](https://github.com/Aircoookie/WLED), by [Aircoookie](https://github.com/Aircoookie)
+- [Spotipy](https://github.com/spotipy-dev/spotipy), by [Paul Lamere](https://github.com/plamere)
