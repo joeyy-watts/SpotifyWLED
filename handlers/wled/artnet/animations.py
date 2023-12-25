@@ -35,7 +35,7 @@ class AnimateCover(ManagedCoroutineFunction):
         :param effect_data: the EffectData object with calculated effects
         :param player_state: the player state associated with the animation
         """
-        self.handler: ArtNetHandler = wled_artnet.handler
+        self.artnet_handler: ArtNetHandler = wled_artnet.artnet_handler
         self.api_handler: SpotifyAPIHandler = wled_artnet.api_handler
         self.image = get_cover(self.api_handler.get_current_track_cover(), wled_artnet.size)
         self.effect_data = self._get_effect_data()
@@ -58,10 +58,10 @@ class AnimateCover(ManagedCoroutineFunction):
 
             # TODO: refactor into separate function
             # TODO: WaveformEffects uses multiply every pixel, OverlayEffect should replace pixels
-            await self.handler.set_pixels([[int(r * i), int(g * i), int(b * i)]
+            await self.artnet_handler.set_pixels([[int(r * i), int(g * i), int(b * i)]
                                            if not is_black((r, g, b)) else
                                            [int(r), int(g), int(b)]
-                                           for r, g, b in self.image])
+                                                  for r, g, b in self.image])
 
             # have to await according to target FPS
             await asyncio.sleep(1 / TARGET_FPS)
