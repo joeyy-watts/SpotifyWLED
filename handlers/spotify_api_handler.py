@@ -1,9 +1,7 @@
 """
 Classes for interacting with Spotify API
 """
-import asyncio
 import inspect
-import pprint
 import time
 from functools import lru_cache
 
@@ -29,6 +27,16 @@ class TrackObject:
             self.track_length = None
             self.cover_url = None
             self.is_playing = False
+
+    def to_dict(self):
+        return {
+            "track_id": self.track_id,
+            "track_name": self.track_name,
+            "progress": self.progress,
+            "track_length": self.track_length,
+            "cover_url": self.cover_url,
+            "is_playing": self.is_playing
+        }
 
 class AudioFeatures:
     def __init__(self, danceability: float, energy: float, key: int, loudness: float, mode: int,
@@ -96,7 +104,6 @@ class SpotifyAPIHandler:
             print(f"API call interval: {diff:.2f}")
 
     def update_current_track(self):
-        # Log API call interval in background
         self.__handle_api_interval()
         self.current_track = TrackObject(self.spotify.currently_playing())
         return self.current_track
@@ -112,6 +119,7 @@ class SpotifyAPIHandler:
 
     @lru_cache(maxsize=32)
     def _get_audio_features_cached(self, track_id):
+        self.__handle_api_interval()
         json = self.spotify.audio_features(track_id)
         self.audio_features = AudioFeatures.from_dict(json[0])
         return self.audio_features
