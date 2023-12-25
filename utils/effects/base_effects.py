@@ -5,6 +5,7 @@ import math
 from typing import Callable
 
 from confs.global_confs import TARGET_FPS
+from handlers.spotify_api_handler import AudioFeatures
 
 
 # TODO: move math-related functions to dedicated module
@@ -128,7 +129,7 @@ class WaveformEffects(Effect):
 
         return self._calculate_effect(func, period)
 
-    def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, invert: bool = False):
+    def trunc_sinuc_bpm(self, bpm: float, a: float = 0.5, v: float = 0.5, h: float = 0, e: float = 1, invert: bool = False):
         """
         Generates truncated sinusoidal pulsate effect.
         Each crest corresponds to one single beat.
@@ -143,9 +144,20 @@ class WaveformEffects(Effect):
         period = 1 / (bpm / (60 * 2))
 
         def func(i):
-            return invert_factor * abs(a * math.sin((2 * math.pi / period) * i)) + v
+            return invert_factor * abs(a * (math.sin((2 * math.pi / period) * i) ** e)) + v
 
         return self._calculate_effect(func, period)
+
+    def trunc_sinus_features(self, features: AudioFeatures, invert: bool = False):
+        """
+        Generates sinusoidal effect based on audio features.
+
+        :param features: AudioFeatures object
+        :param invert: if True, inverts the waveform
+        """
+
+        return self.trunc_sinuc_bpm(features.tempo, 0.3, 0.6, 0, 10 * features.energy, invert)
+
 
     def sawtooth(self, a, p, v):
         """
