@@ -6,7 +6,7 @@ import time
 from functools import lru_cache
 
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 
 from confs.global_confs import IDLE_IMAGE_URL, POLLING_SECONDS
 
@@ -72,10 +72,8 @@ class AudioFeatures:
         return self.json
 
 class SpotifyAPIHandler:
-    def __init__(self, client_id: str, client_secret: str):
+    def __init__(self):
         self.spotify = spotipy.Spotify(auth_manager=SpotifyOAuth(
-            client_id=client_id,
-            client_secret=client_secret,
             redirect_uri="http://localhost:8080",
             scope="user-read-currently-playing,user-read-playback-state"))
 

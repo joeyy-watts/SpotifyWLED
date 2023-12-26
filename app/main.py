@@ -1,3 +1,5 @@
+import os
+
 from handlers.main_http_handler import AioMainHTTPHandler
 from utils.common import get_client_id, get_client_secret, WLEDMode
 import socket
@@ -8,11 +10,11 @@ USER SETTINGS
 Adjust these settings according to your WLED setup.
 """
 # mDNS or IP address of target WLED device
-TARGET = 'wled-frame.local'
+TARGET = os.environ['TARGET']
 
 # Dimensions of target WLED device
-TARGET_WIDTH = 32
-TARGET_HEIGHT = 32
+TARGET_WIDTH = int(os.environ['TARGET_WIDTH'])
+TARGET_HEIGHT = int(os.environ['TARGET_HEIGHT'])
 
 """
 There are two modes of operation for WLED:

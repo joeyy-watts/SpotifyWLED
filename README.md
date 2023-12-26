@@ -17,14 +17,39 @@ _(maybe I'll get around to refactoring it one day..)_
 
 
 ## Usage
+### Spotify Developer Account Setup
 1. Setup an App in your Spotify dashboard (https://developer.spotify.com/dashboard)
 2. Add your active Spotify account as a user of the App
-3. Copy the Client ID and Client Secret into the `client_id.conf` and `client_secret.conf` files respectively 
-   1. alternatively, export them to environment variables `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
-4. Add your WLED device's IP address (with `http://`; add port, if applicable) to `wled.conf` file
-5. Start the script using `main.py`
-   1. Upon first run, it will prompt you to log in to Spotify and authorize the app. Follow the instructions.
-6. Start playing music on the same Spotify account, and hit `localhost:8081/start` to start
+3. Add `http://localhost:8080` to `Redirect URIs` in your App
+
+
+### Running the Docker Image
+Pull the image from Docker Hub:
+
+**todo**: publish image to docker hub
+```
+docker pull joeyywatts/spotifywled
+```
+
+Run the image, substituting the environment variables:
+
+**todo**: mount path for spotipy credentials cache
+```
+docker run -d \
+    -e SPOTIPY_CLIENT_ID=<your_client_id> \
+    -e SPOTIPY_CLIENT_SECRET=<your_client_secret> \
+    -e TARGET=<your_wled_ip> \
+    -e TARGET_WIDTH=<your_wled_width> \
+    -e TARGET_HEIGHT=<your_wled_height> \
+    -p 8080:8080 \
+    joeyywatts/spotifywled
+```
+
+Visit `localhost:8080` in your browser to authorize the app with your Spotify account, you will then be redirected to the index.
+
+To start, click `Start Loop` in the UI.
+
+To stop, click `Stop Loop` in the UI.
 
 
 ## Credits
