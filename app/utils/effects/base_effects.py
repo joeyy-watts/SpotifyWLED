@@ -2,10 +2,11 @@
 Classes for low-level effects (i.e. effects from pure waveforms)
 """
 import math
-from typing import Callable
+from typing import Callable, final
 
 from confs.global_confs import TARGET_FPS
 from handlers.spotify_api_handler import AudioFeatures
+from utils.effects.effects_utils import is_black
 
 
 # TODO: move math-related functions to dedicated module
@@ -21,6 +22,22 @@ class EffectData:
         self.factors = factors
         self.period = period
 
+    def apply(self, image):
+        """
+        applies effect to image
+        :param image: image to apply effect to
+        :return: image with effect frames precalculated
+        """
+        frames = []
+
+        for i in self.factors:
+            frames.append([[int(r * i), int(g * i), int(b * i)]
+                        if not is_black((r, g, b)) else
+                        [int(r), int(g), int(b)]
+                        for r, g, b in image])
+
+        return frames
+
 class Effect:
     def __init__(self, width: int, height: int):
         """
@@ -35,20 +52,7 @@ class Effect:
         """
         self.target_fps = TARGET_FPS
 
-    def _get_effect(self, mode):
-        """
-        calculates the effect, and returns the factor
-        :return:
-        """
-        raise NotImplementedError
-
-    def stop_effect(self):
-        """
-        stops the effect
-        :return:
-        """
-        raise NotImplementedError
-
+    @final
     def _calculate_effect(self, function: Callable[..., list[float]], period):
         """
         Calculates the required data for effects.
