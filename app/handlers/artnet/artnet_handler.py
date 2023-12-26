@@ -1,5 +1,6 @@
 import asyncio
 from enum import Enum
+from functools import lru_cache
 from math import ceil, floor
 
 from pyartnet import ArtNetNode, Channel, BaseUniverse, output_correction
@@ -97,7 +98,7 @@ class ArtNetHandler:
 
         await asyncio.gather(*[self.__async_set_pixels(up) for up in assigned_pixels])
 
-
+    @lru_cache(maxsize=256)
     def __assign_pixels(self, pixels: list, universes: list):
         """
         Breaks up the given pixels, and assigns the maximum number into each universe.
