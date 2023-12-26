@@ -27,15 +27,13 @@ POLLING_SECONDS = 5  # period in seconds to poll Spotify API for changes
 
 class AioMainHTTPHandler():
     def __init__(self,
-                 client_id: str,
-                 client_secret: str,
                  wled_address: str,
                  wled_mode: WLEDMode,
                  width: int,
                  height: int):
         self.app = web.Application()
         self.address = wled_address
-        self.api_handler = SpotifyAPIHandler(client_id, client_secret)
+        self.api_handler = SpotifyAPIHandler()
         self.width = width
         self.height = height
         self.wled_mode = wled_mode

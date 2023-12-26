@@ -38,8 +38,6 @@ if __name__ == '__main__':
         exit(1)
 
     handler = AioMainHTTPHandler(
-        get_client_id(),
-        get_client_secret(),
         target_ip,
         WLED_MODE,
         TARGET_WIDTH,
