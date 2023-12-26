@@ -54,10 +54,15 @@ class AnimateCover(ManagedCoroutineFunction):
         Main function that plays animation
         """
         for frame in self.frames:
+            pre_frame_time = time.perf_counter()
             await self.artnet_handler.set_pixels(frame)
+            post_frame_time = time.perf_counter()
 
             # have to await according to target FPS
-            await asyncio.sleep(1 / TARGET_FPS)
+            # also, account for time spent in .set_pixels()
+            await asyncio.sleep(
+                max(((1 / TARGET_FPS) - (post_frame_time - pre_frame_time)), 0)
+            )
 
     @final
     async def _stop_function(self):
