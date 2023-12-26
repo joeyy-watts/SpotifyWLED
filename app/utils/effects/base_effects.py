@@ -31,12 +31,12 @@ class EffectData:
         frames = []
 
         for i in self.factors:
-            frames.append([[int(r * i), int(g * i), int(b * i)]
+            frames.append(tuple([(int(r * i), int(g * i), int(b * i))
                         if not is_black((r, g, b)) else
-                        [int(r), int(g), int(b)]
-                        for r, g, b in image])
+                       (int(r), int(g), int(b))
+                        for r, g, b in image]))
 
-        return frames
+        return tuple(frames)
 
 class Effect:
     def __init__(self, width: int, height: int):

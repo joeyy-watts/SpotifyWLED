@@ -41,7 +41,7 @@ class ArtNetHandler:
         self.universes = self.__initialize_universes(mode)
         self.__initialize_channels()
 
-    def __initialize_universes(self, mode: WLEDArtNetMode):
+    def __initialize_universes(self, mode: WLEDArtNetMode) -> tuple:
         universes = []
 
         for i in range(self.__get_num_universe(self.leds, mode)):
@@ -50,7 +50,7 @@ class ArtNetHandler:
         # for u in universes:
         #     u.set_output_correction(output_correction.quadratic)
 
-        return universes
+        return tuple(universes)
 
     def __initialize_channels(self):
         for idx, u in enumerate(self.universes):
@@ -93,13 +93,13 @@ class ArtNetHandler:
 
         await self.universes[0]['brightness']
 
-    async def set_pixels(self, pixels: list):
+    async def set_pixels(self, pixels: tuple):
         assigned_pixels = self.__assign_pixels(pixels, self.universes)
 
         await asyncio.gather(*[self.__async_set_pixels(up) for up in assigned_pixels])
 
     @lru_cache(maxsize=256)
-    def __assign_pixels(self, pixels: list, universes: list):
+    def __assign_pixels(self, pixels: tuple, universes: tuple):
         """
         Breaks up the given pixels, and assigns the maximum number into each universe.
 
