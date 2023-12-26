@@ -9,7 +9,6 @@ from handlers.spotify_api_handler import SpotifyAPIHandler
 from utils.async_utils import ManagedCoroutineFunction
 from utils.effects.base_effects import EffectData
 from utils.effects.effects import PlaybackEffects
-from utils.effects.effects_utils import is_black
 from utils.image_utils import get_cover
 
 """
@@ -45,6 +44,8 @@ class AnimateCover(ManagedCoroutineFunction):
 
         self.wled_artnet = wled_artnet
 
+        self.frames = self.effect_data.apply(self.image)
+
         super().__init__()
 
     @final
@@ -52,16 +53,8 @@ class AnimateCover(ManagedCoroutineFunction):
         """
         Main function that plays animation
         """
-        for i in self.effect_data.factors:
-            # TODO: for brighter pixels, apply factor at 1.0 multiplier
-            # for darker pixels, apply factor scaled to absolute brightness
-
-            # TODO: refactor into separate function
-            # TODO: WaveformEffects uses multiply every pixel, OverlayEffect should replace pixels
-            await self.artnet_handler.set_pixels([[int(r * i), int(g * i), int(b * i)]
-                                           if not is_black((r, g, b)) else
-                                           [int(r), int(g), int(b)]
-                                                  for r, g, b in self.image])
+        for frame in self.frames:
+            await self.artnet_handler.set_pixels(frame)
 
             # have to await according to target FPS
             await asyncio.sleep(1 / TARGET_FPS)
