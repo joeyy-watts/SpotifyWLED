@@ -122,12 +122,12 @@ class ArtNetHandler:
             pixel_slice = pixels[i * ppu:min((i + 1) * ppu, len(pixels))]
 
             universe_to_pixels.append(
-                (universes[i], pixel_slice, offset)
+                (universes[i], tuple(pixel_slice), offset)
             )
 
-        return universe_to_pixels
+        return tuple(universe_to_pixels)
 
-    async def __async_set_pixels(self, upo: tuple[BaseUniverse, list, int]):
+    async def __async_set_pixels(self, upo: tuple[BaseUniverse, tuple, int]):
         """
         Asynchronously sets pixels in a given universe
 
