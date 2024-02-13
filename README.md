@@ -1,9 +1,9 @@
 ![SpotifyWLED](./spotifywled.png)
 
 # THIS PROJECT IS CURRENTLY ON HOLD
-As the performance is quite poor due to the entire thing being in Python, I'm currently experimenting rebuilding it in Rust.
+As the performance is quite poor due to the entire thing being in Python, I've decided to rebuild it in Rust (yes, I know :P).
 
-The new repository will be under [here](https://github.com/joeyy-watts/RustifyWLED).
+**Development is underway [here](https://github.com/joeyy-watts/rustify-wled).**
 
 # SpotifyWLED
 A not-so-simple script to listen to the currently playing track on your Spotify account and forward it to a WLED (https://github.com/Aircoookie/WLED) LED matrix.
